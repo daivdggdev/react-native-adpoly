@@ -1,0 +1,23 @@
+{
+  "name": "react-native-adpoly",
+  "version": "1.0.0",
+  "description": "ad poly for react native",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daivdggdev/react-native-adpoly.git"
+  },
+  "keywords": [
+    "react-native",
+    "ad"
+  ],
+  "author": "dwwang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/daivdggdev/react-native-adpoly/issues"
+  },
+  "homepage": "https://github.com/daivdggdev/react-native-adpoly#readme"
+}
