@@ -1,4 +1,4 @@
-<manifest xml:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.dwwang.RNAdPoly">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -22,6 +22,12 @@
         <activity
             android:name="com.qq.e.ads.ADActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize" />
+
+        <activity
+            android:name=".SplashActivity"
+            android:screenOrientation="portrait"
+            <!--android:theme="@android:style/Theme.NoTitleBar.Fullscreen">-->
+        </activity>
 
     </application>
 </manifest>

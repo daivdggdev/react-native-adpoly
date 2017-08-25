@@ -1,7 +1,5 @@
 package com.dwwang.RNAdPoly;
 
-import android.net.Uri;
-
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -11,6 +9,9 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
 import java.util.Map;
+import android.util.Log;
+import android.net.Uri;
+import android.view.ViewGroup;
 
 import com.qq.e.ads.splash.SplashAD;
 import com.qq.e.ads.splash.SplashADListener;
@@ -42,7 +43,10 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             return;
         }
         
-        ViewGroup viewGroup = (ViewGroup) getWindow().getDecorView();
+        startActivity(new Intent(this.context, SplashActivity.class));
+        /*
+        Activity activity = (Activity)this.context;
+        ViewGroup viewGroup = (ViewGroup) activity.getWindow().getDecorView();
         mSplashAD = new SplashAD(this.context, viewGroup, appKey, placementId, new SplashADListener() {
             @Override
             public void onADDismissed() {
@@ -69,6 +73,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                 Log.i("AD_DEMO", "onADTick");
             }
         });
+        */
     }
 
     @Override
