@@ -20,7 +20,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     private SplashAD mSplashAD;
     ReactApplicationContext context;
 
-    public RNSoundModule(ReactApplicationContext context) {
+    public RNAdPolyModule(ReactApplicationContext context) {
         super(context);
         this.context = context;
     }

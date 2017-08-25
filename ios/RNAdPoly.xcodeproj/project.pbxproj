@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		45A730271F4EBA610017BAC3 /* RNAdPoly.m in Sources */ = {isa = PBXBuildFile; fileRef = 45A730261F4EBA610017BAC3 /* RNAdPoly.m */; };
 		45A730281F4EBA610017BAC3 /* RNAdPoly.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45A730251F4EBA610017BAC3 /* RNAdPoly.h */; };
+		45BA85A41F4FF7550035A5E9 /* BaiduMobAdSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BA859C1F4FF7550035A5E9 /* BaiduMobAdSDK.framework */; };
+		45BA85A51F4FF7550035A5E9 /* libGDTMobSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BA85A31F4FF7550035A5E9 /* libGDTMobSDK.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +30,14 @@
 		45A730221F4EBA610017BAC3 /* libRNAdPoly.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNAdPoly.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45A730251F4EBA610017BAC3 /* RNAdPoly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNAdPoly.h; sourceTree = "<group>"; };
 		45A730261F4EBA610017BAC3 /* RNAdPoly.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNAdPoly.m; sourceTree = "<group>"; };
+		45BA859A1F4FF7550035A5E9 /* baidumobadsdk.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = baidumobadsdk.bundle; sourceTree = "<group>"; };
+		45BA859C1F4FF7550035A5E9 /* BaiduMobAdSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = BaiduMobAdSDK.framework; sourceTree = "<group>"; };
+		45BA859E1F4FF7550035A5E9 /* GDTMobBannerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDTMobBannerView.h; sourceTree = "<group>"; };
+		45BA859F1F4FF7550035A5E9 /* GDTMobInterstitial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDTMobInterstitial.h; sourceTree = "<group>"; };
+		45BA85A01F4FF7550035A5E9 /* GDTNativeAd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDTNativeAd.h; sourceTree = "<group>"; };
+		45BA85A11F4FF7550035A5E9 /* GDTSplashAd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDTSplashAd.h; sourceTree = "<group>"; };
+		45BA85A21F4FF7550035A5E9 /* GDTTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDTTrack.h; sourceTree = "<group>"; };
+		45BA85A31F4FF7550035A5E9 /* libGDTMobSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libGDTMobSDK.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +45,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45BA85A41F4FF7550035A5E9 /* BaiduMobAdSDK.framework in Frameworks */,
+				45BA85A51F4FF7550035A5E9 /* libGDTMobSDK.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +56,7 @@
 		45A730191F4EBA610017BAC3 = {
 			isa = PBXGroup;
 			children = (
+				45BA85981F4FF7550035A5E9 /* Libraries */,
 				45A730241F4EBA610017BAC3 /* RNAdPoly */,
 				45A730231F4EBA610017BAC3 /* Products */,
 			);
@@ -64,6 +77,45 @@
 				45A730261F4EBA610017BAC3 /* RNAdPoly.m */,
 			);
 			path = RNAdPoly;
+			sourceTree = "<group>";
+		};
+		45BA85981F4FF7550035A5E9 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				45BA85991F4FF7550035A5E9 /* BaiduMobAdSDK_v4.5 */,
+				45BA859D1F4FF7550035A5E9 /* GDT_iOS_SDK_v4.5.7 */,
+			);
+			path = Libraries;
+			sourceTree = "<group>";
+		};
+		45BA85991F4FF7550035A5E9 /* BaiduMobAdSDK_v4.5 */ = {
+			isa = PBXGroup;
+			children = (
+				45BA859A1F4FF7550035A5E9 /* baidumobadsdk.bundle */,
+				45BA859B1F4FF7550035A5E9 /* Frameworks */,
+			);
+			path = BaiduMobAdSDK_v4.5;
+			sourceTree = "<group>";
+		};
+		45BA859B1F4FF7550035A5E9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				45BA859C1F4FF7550035A5E9 /* BaiduMobAdSDK.framework */,
+			);
+			path = Frameworks;
+			sourceTree = "<group>";
+		};
+		45BA859D1F4FF7550035A5E9 /* GDT_iOS_SDK_v4.5.7 */ = {
+			isa = PBXGroup;
+			children = (
+				45BA859E1F4FF7550035A5E9 /* GDTMobBannerView.h */,
+				45BA859F1F4FF7550035A5E9 /* GDTMobInterstitial.h */,
+				45BA85A01F4FF7550035A5E9 /* GDTNativeAd.h */,
+				45BA85A11F4FF7550035A5E9 /* GDTSplashAd.h */,
+				45BA85A21F4FF7550035A5E9 /* GDTTrack.h */,
+				45BA85A31F4FF7550035A5E9 /* libGDTMobSDK.a */,
+			);
+			path = GDT_iOS_SDK_v4.5.7;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -223,9 +275,17 @@
 		45A7302C1F4EBA610017BAC3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Libraries/BaiduMobAdSDK_v4.5/Frameworks",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../react-native/React/**",
 					"$(SRCROOT)/node_moduels/react-native/React/**",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Libraries/GDT_iOS_SDK_v4.5.7",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -236,9 +296,17 @@
 		45A7302D1F4EBA610017BAC3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Libraries/BaiduMobAdSDK_v4.5/Frameworks",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../react-native/React/**",
 					"$(SRCROOT)/node_moduels/react-native/React/**",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Libraries/GDT_iOS_SDK_v4.5.7",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
