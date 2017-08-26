@@ -35,12 +35,17 @@ public class SplashActivity extends Activity implements SplashADListener {
   private TextView skipView;
   private ImageView splashHolder;
   private static final String SKIP_TEXT = "点击跳过 %d";
-  
+
   public boolean canJump = false;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    int rid = IdHelper.getLayout(this, "activity_splash");
+    Log.i("AD_DEMO", "rid = " + rid);
+    //Log.i("AD_DEMO", "R.layout = " + android.R.layout);
+
     setContentView(R.layout.activity_splash);
     container = (ViewGroup) this.findViewById(R.id.splash_container);
     skipView = (TextView) findViewById(R.id.skip_view);
@@ -165,7 +170,7 @@ public class SplashActivity extends Activity implements SplashADListener {
   public void onNoAD(int errorCode) {
     Log.i("AD_DEMO", "LoadSplashADFail, eCode=" + errorCode);
     /** 如果加载广告失败，则直接跳转 */
-    this.startActivity(new Intent(this, DemoListActivity.class));
+    //this.startActivity(new Intent(this, DemoListActivity.class));
     this.finish();
   }
 
@@ -175,7 +180,7 @@ public class SplashActivity extends Activity implements SplashADListener {
    */
   private void next() {
     if (canJump) {
-      this.startActivity(new Intent(this, DemoListActivity.class));
+      //this.startActivity(new Intent(this, DemoListActivity.class));
       this.finish();
     } else {
       canJump = true;

@@ -25,9 +25,7 @@
 
         <activity
             android:name=".SplashActivity"
-            android:screenOrientation="portrait"
-            <!--android:theme="@android:style/Theme.NoTitleBar.Fullscreen">-->
-        </activity>
+            android:screenOrientation="portrait" />
 
     </application>
 </manifest>

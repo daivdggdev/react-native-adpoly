@@ -12,9 +12,11 @@ import java.util.Map;
 import android.util.Log;
 import android.net.Uri;
 import android.view.ViewGroup;
+import android.content.Intent;
 
 import com.qq.e.ads.splash.SplashAD;
 import com.qq.e.ads.splash.SplashADListener;
+
 
 public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
@@ -33,17 +35,33 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void showSplash(String type, String appKey, String placementId) {
+        Log.i("AD_DEMO", "type = " + type);
+            showGdtSplash(appKey, placementId);
         if (type == "gdt") {
+        Log.i("AD_DEMO", "type22 = " + type);
             showGdtSplash(appKey, placementId);
         }
+        Log.i("AD_DEMO", "type33 = " + type);
     }
 
     private void showGdtSplash(String appKey, String placementId) {
+        Log.i("AD_DEMO", "appKey = " + appKey);
         if (appKey == null || placementId == null) {
             return;
         }
+
         
-        startActivity(new Intent(this.context, SplashActivity.class));
+        Log.i("AD_DEMO", "showGdtSplash");
+        ReactApplicationContext context = getReactApplicationContext();
+        int rid = IdHelper.getLayout(context, "activity_splash");
+        Log.i("AD_DEMO", "rid112 = " + R.layout.dev_loading_view);
+
+        Log.i("AD_DEMO", "R.layout = " + context.getApplicationContext().getPackageName());
+
+        Intent intent = new Intent(context, SplashActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+        //this.context.startActivity(new Intent(this.context, SplashActivity.class));
         /*
         Activity activity = (Activity)this.context;
         ViewGroup viewGroup = (ViewGroup) activity.getWindow().getDecorView();

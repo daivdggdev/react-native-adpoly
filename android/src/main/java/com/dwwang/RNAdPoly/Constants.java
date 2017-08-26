@@ -1,4 +1,4 @@
-package com.qq.e.union.demo;
+package com.dwwang.RNAdPoly;
 
 public class Constants {
   public static final String APPID = "1101152570";
