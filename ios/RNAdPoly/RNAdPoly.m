@@ -302,7 +302,7 @@ RCT_EXPORT_MODULE();
 }
 #endif
 
-RCT_EXPORT_METHOD(showSplash:(NSInteger)type
+RCT_EXPORT_METHOD(showSplash:(NSString*)type
                   appKey:(NSString*)appKey
                   placementId:(NSString*)placementId)
 {
@@ -314,11 +314,11 @@ RCT_EXPORT_METHOD(showSplash:(NSInteger)type
             [manager drawBottomView];
         }
         
-        if (type == AdSplashType_GDT)
+        if ([type isEqual:@"gdt"])
         {
             [manager showGdtSplash:appKey withPlacementId:placementId];
         }
-        else if (type == AdSplashType_BAIDU)
+        else if ([type isEqual:@"baidu"])
         {
             [manager showBaiduSplash:appKey withPublisherId:placementId];
         }
