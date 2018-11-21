@@ -13,5 +13,12 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/daivdggdev/react-native-adpoly", :tag => "v#{s.version}" }
   s.source_files = "ios/RNAdPoly/*.{h,m}"
 
+  s.subspec 'GDT' do |gdt|
+    gdt.source_files = "ios/Libraries/GDT_iOS_SDK_4.8.1/*.h"
+    gdt.vendored_libraries = "ios/Libraries/GDT_iOS_SDK_4.8.1/libGDTMobSDK.a"
+    gdt.libraries = "GDTMobSDK"
+  end
+
   s.dependency 'React'
+  s.dependency 'Masonry'
 end
