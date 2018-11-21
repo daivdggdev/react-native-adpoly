@@ -50,15 +50,12 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             return;
         }
 
-        
         Log.i("AD_DEMO", "showGdtSplash");
         ReactApplicationContext context = getReactApplicationContext();
-        int rid = IdHelper.getLayout(context, "activity_splash");
-        Log.i("AD_DEMO", "rid112 = " + R.layout.dev_loading_view);
-
-        Log.i("AD_DEMO", "R.layout = " + context.getApplicationContext().getPackageName());
 
         Intent intent = new Intent(context, SplashActivity.class);
+        intent.putExtra("appKey", appKey);
+        intent.putExtra("placementId", placementId);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
         //this.context.startActivity(new Intent(this.context, SplashActivity.class));

@@ -7,7 +7,6 @@
 //
 
 #import "RNAdPoly.h"
-#import <BaiduMobAdSDK/BaiduMobAdSplash.h>
 #import "GDTSplashAd.h"
 #import <Masonry/Masonry.h>
 //#import <SDWebImage/UIImageView+WebCache.h>
@@ -21,11 +20,8 @@ typedef NS_ENUM(NSInteger, AdSplashType)
     AdSplashType_BAIDU,
 };
 
-static NSString *baiduPublisherId = nil;
-
-@interface RNAdPoly ()<BaiduMobAdSplashDelegate, GDTSplashAdDelegate/*, IMNativeDelegate*/>
+@interface RNAdPoly ()<GDTSplashAdDelegate/*, IMNativeDelegate*/>
 @property (nonatomic, strong) GDTSplashAd *gdtSplash;
-@property (nonatomic, strong) BaiduMobAdSplash *baiduSplash;
 @property (nonatomic, strong) UIView *customSplashView;
 @property (nonatomic, strong) UIView *bottomView;
 
@@ -154,29 +150,6 @@ RCT_EXPORT_MODULE();
     //[splashAd loadAdAndShowInWindow:self.window]; //设置开屏底部自定义LogoView，展示半屏开屏广告
     
     [self.gdtSplash loadAdAndShowInWindow:window withBottomView:self.bottomView];
-}
-
-- (void)showBaiduSplash:(NSString*)adUnit withPublisherId:(NSString*)publisherId
-{
-    baiduPublisherId = publisherId;
-    self.baiduSplash = [[BaiduMobAdSplash alloc] init];
-    self.baiduSplash.delegate = self;
-    self.baiduSplash.AdUnitTag = adUnit; //@"2058492";
-    self.baiduSplash.canSplashClick = YES;
-    
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
-    self.customSplashView = [[UIView alloc] initWithFrame:window.frame];
-    self.customSplashView.backgroundColor = [UIColor whiteColor];
-    [window addSubview:self.customSplashView];
-    
-    CGFloat screenWidth = window.frame.size.width;
-    CGFloat screenHeight = window.frame.size.height;
-    
-    UIView * baiduSplashContainer = [[UIView alloc]initWithFrame:CGRectMake(0, 0, screenWidth, screenHeight - 120)];
-    [self.customSplashView addSubview:baiduSplashContainer];
-    [self.customSplashView addSubview:self.bottomView];
-    
-    [self.baiduSplash loadAndDisplayUsingContainerView:baiduSplashContainer];
 }
 
 #if 0
@@ -320,7 +293,7 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
         }
         else if ([type isEqual:@"baidu"])
         {
-            [manager showBaiduSplash:appKey withPublisherId:placementId];
+            //[manager showBaiduSplash:appKey withPublisherId:placementId];
         }
     });
 }
@@ -359,53 +332,11 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
     [self removeSplash];
 }
 
-#pragma mark Baidu Splash Delegate
-
-- (NSString *)publisherId
-{
-    return baiduPublisherId;
-}
-
-- (void)splashDidClicked:(BaiduMobAdSplash *)splash
-{
-    NSLog(@"splashDidClicked");
-}
-
-- (void)splashDidDismissLp:(BaiduMobAdSplash *)splash
-{
-    NSLog(@"splashDidDismissLp");
-}
-
-- (void)splashDidDismissScreen:(BaiduMobAdSplash *)splash
-{
-    NSLog(@"splashDidDismissScreen");
-    [self removeSplash];
-}
-
-- (void)splashSuccessPresentScreen:(BaiduMobAdSplash *)splash
-{
-    NSLog(@"splashSuccessPresentScreen");
-}
-
-- (void)splashlFailPresentScreen:(BaiduMobAdSplash *)splash withError:(BaiduMobFailReason)reason
-{
-    NSLog(@"splashlFailPresentScreen withError %d", reason);
-    [self removeSplash];
-    [self sendEventWithName:@"ShowSplashFailed" body:nil];
-}
-
 /**
  *  展示结束or展示失败后, 手动移除splash和delegate
  */
 - (void) removeSplash
 {
-    if (self.baiduSplash)
-    {
-        self.baiduSplash.delegate = nil;
-        self.baiduSplash = nil;
-        [self.customSplashView removeFromSuperview];
-    }
-    
     if (self.gdtSplash)
     {
         self.gdtSplash.delegate = nil;
