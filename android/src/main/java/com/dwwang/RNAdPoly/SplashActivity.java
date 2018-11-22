@@ -210,7 +210,6 @@ public class SplashActivity extends Activity implements SplashADListener {
     handler.postDelayed(new Runnable() {
       @Override
       public void run() {
-        SplashActivity.this.startActivity(new Intent(SplashActivity.this, DemoListActivity.class));
         SplashActivity.this.finish();
       }
     }, shouldDelayMills);
