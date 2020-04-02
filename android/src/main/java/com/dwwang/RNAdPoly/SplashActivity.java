@@ -184,6 +184,11 @@ public class SplashActivity extends Activity implements SplashADListener {
   }
 
   @Override
+  public void onADLoaded(long expireTimestamp) {
+    Log.i("AD_DEMO", "SplashADFetch expireTimestamp:"+expireTimestamp);
+  }
+
+  @Override
   public void onADDismissed() {
     Log.i("AD_DEMO", "SplashADDismissed");
     next();
@@ -250,9 +255,6 @@ public class SplashActivity extends Activity implements SplashADListener {
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
     if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_HOME) {
-      if(keyCode == KeyEvent.KEYCODE_BACK && loadAdOnlyView.getVisibility() == View.VISIBLE){
-        return super.onKeyDown(keyCode, event);
-      }
       return true;
     }
     return super.onKeyDown(keyCode, event);

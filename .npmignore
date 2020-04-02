@@ -27,3 +27,7 @@ DerivedData
 
 # git
 .git
+
+.gradle
+.project
+.settings
