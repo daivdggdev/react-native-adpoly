@@ -14,8 +14,8 @@ Pod::Spec.new do |s|
   s.source_files = "ios/RNAdPoly/*.{h,m}"
 
   s.subspec 'GDT' do |gdt|
-    gdt.source_files = "ios/Libraries/GDT_iOS_SDK_4.8.5/*.h"
-    gdt.vendored_libraries = "ios/Libraries/GDT_iOS_SDK_4.8.5/libGDTMobSDK.a"
+    gdt.source_files = "ios/Libraries/GDT_iOS_SDK_4.11.6/*.h"
+    gdt.vendored_libraries = "ios/Libraries/GDT_iOS_SDK_4.11.6/libGDTMobSDK.a"
     gdt.libraries = "GDTMobSDK"
   end
 

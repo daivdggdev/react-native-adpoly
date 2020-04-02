@@ -134,8 +134,7 @@ RCT_EXPORT_MODULE();
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
     
     //开屏广告初始化并展示代码
-    //self.gdtSplash = [[GDTSplashAd alloc] initWithAppkey:@"3630" placementId:@"88633644363093"];
-    self.gdtSplash = [[GDTSplashAd alloc] initWithAppkey:appKey placementId:placementId];
+    self.gdtSplash = [[GDTSplashAd alloc] initWithAppId:appKey placementId:placementId];
     self.gdtSplash.delegate = self;
     
     if ([[UIScreen mainScreen] bounds].size.height >= 568.0f)

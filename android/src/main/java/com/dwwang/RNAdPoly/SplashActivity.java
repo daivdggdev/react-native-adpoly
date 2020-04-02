@@ -98,10 +98,6 @@ public class SplashActivity extends Activity implements SplashADListener {
       lackedPermission.add(Manifest.permission.READ_PHONE_STATE);
     }
 
-    if (!(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
-      lackedPermission.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    }
-
     if (!(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)) {
       lackedPermission.add(Manifest.permission.ACCESS_FINE_LOCATION);
     }
@@ -155,7 +151,8 @@ public class SplashActivity extends Activity implements SplashADListener {
   private void fetchSplashAD(Activity activity, ViewGroup adContainer, View skipContainer,
       String appId, String posId, SplashADListener adListener, int fetchDelay) {
     fetchSplashADTime = System.currentTimeMillis();
-    splashAD = new SplashAD(activity, adContainer, skipContainer, appId, posId, adListener, fetchDelay);
+    splashAD = new SplashAD(activity, skipContainer, appId, posId, adListener, fetchDelay);
+    splashAD.fetchAndShowIn(adContainer);
   }
 
   @Override
@@ -253,6 +250,9 @@ public class SplashActivity extends Activity implements SplashADListener {
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
     if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_HOME) {
+      if(keyCode == KeyEvent.KEYCODE_BACK && loadAdOnlyView.getVisibility() == View.VISIBLE){
+        return super.onKeyDown(keyCode, event);
+      }
       return true;
     }
     return super.onKeyDown(keyCode, event);
