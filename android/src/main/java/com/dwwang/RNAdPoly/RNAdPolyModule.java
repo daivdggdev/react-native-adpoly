@@ -36,7 +36,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void showSplash(String type, String appKey, String placementId) {
         Log.i("AD_DEMO", "type = " + type);
-        if (type == "gdt") {
+        if (type.equals("gdt")) {
             showGdtSplash(appKey, placementId);
         }
     }
