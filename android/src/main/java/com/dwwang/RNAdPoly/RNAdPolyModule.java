@@ -11,21 +11,20 @@ import java.util.HashMap;
 import java.util.Map;
 import android.util.Log;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.view.ViewGroup;
 import android.content.Intent;
 
-import com.qq.e.ads.splash.SplashAD;
-import com.qq.e.ads.splash.SplashADListener;
-
+import com.qq.e.comm.managers.GDTADManager;
 
 public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
-    private SplashAD mSplashAD;
     ReactApplicationContext context;
 
     public RNAdPolyModule(ReactApplicationContext context) {
         super(context);
         this.context = context;
+        AdHelper.reactContext = context;
     }
 
     @Override
@@ -34,10 +33,30 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void init(String type, String appId) {
+        Log.i("AD_DEMO", "init type = " + type);
+        if (type.equals("gdt")) {
+            GDTADManager.getInstance().initWith(this.context, appId);
+        } else if (type.equals("tt")) {
+            TTAdManagerHolder.init(this.context, appId);
+        }
+    }
+
+    @ReactMethod
     public void showSplash(String type, String appKey, String placementId) {
         Log.i("AD_DEMO", "type = " + type);
         if (type.equals("gdt")) {
             showGdtSplash(appKey, placementId);
+        } else if (type.equals("tt")) {
+            showTTSplash(placementId);
+        }
+    }
+
+    @ReactMethod
+    public void showFullScreenVideo(String type, String appKey, String placementId) {
+        Log.i("AD_DEMO", "type = " + type);
+        if (type.equals("tt")) {
+            showTTFullScreenVideo(placementId);
         }
     }
 
@@ -55,37 +74,34 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         intent.putExtra("placementId", placementId);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
-        //this.context.startActivity(new Intent(this.context, SplashActivity.class));
-        /*
-        Activity activity = (Activity)this.context;
-        ViewGroup viewGroup = (ViewGroup) activity.getWindow().getDecorView();
-        mSplashAD = new SplashAD(this.context, viewGroup, appKey, placementId, new SplashADListener() {
-            @Override
-            public void onADDismissed() {
-                Log.i("AD_DEMO", "onADDismissed");
-            }
+    }
 
-            @Override
-            public void onNoAD(int i) {
-                Log.i("AD_DEMO", "onNoAD");
-            }
+    private void showTTSplash(String placementId) {
+        Log.i("AD_DEMO", "showTTSplash placementId = " + placementId);
+        if (TextUtils.isEmpty(placementId)) {
+            return;
+        }
 
-            @Override
-            public void onADPresent() {
-                Log.i("AD_DEMO", "onADPresent");
-            }
+        ReactApplicationContext context = getReactApplicationContext();
 
-            @Override
-            public void onADClicked() {
-                Log.i("AD_DEMO", "onADClicked");
-            }
+        Intent intent = new Intent(context, TTSplashActivity.class);
+        intent.putExtra("placementId", placementId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
 
-            @Override
-            public void onADTick(long l) {
-                Log.i("AD_DEMO", "onADTick");
-            }
-        });
-        */
+    private void showTTFullScreenVideo(String placementId) {
+        Log.i("AD_DEMO", "showTTFullScreenVideo placementId = " + placementId);
+        if (TextUtils.isEmpty(placementId)) {
+            return;
+        }
+
+        ReactApplicationContext context = getReactApplicationContext();
+
+        Intent intent = new Intent(context, TTFullScreenVideoActivity.class);
+        intent.putExtra("placementId", placementId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
     }
 
     @Override

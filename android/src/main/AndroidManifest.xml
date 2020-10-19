@@ -10,6 +10,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />    <!-- 如果需要精确定位的话请加上此权限 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.GET_TASKS"/>
+
+    <!-- 如果有视频相关的广告且使用textureView播放，请务必添加，否则黑屏 -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <uses-sdk
         android:minSdkVersion="16"
@@ -29,23 +33,33 @@
       <!--</provider>-->
 
         <service
-            android:name="com.qq.e.comm.DownloadService"
-            android:exported="false" />
+          android:name="com.qq.e.comm.DownloadService"
+          android:exported="false" />
+
         <activity
-            android:name="com.qq.e.ads.ADActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize" />
+          android:name="com.qq.e.tg.ADActivity"
+          android:configChanges="keyboard|keyboardHidden|orientation|screenSize" />
 
-        <activity 
-            android:name="com.qq.e.ads.PortraitADActivity" 
-            android:screenOrientation="portrait" 
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize" />
+        <activity
+          android:name="com.qq.e.tg.PortraitADActivity"
+          android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+          android:screenOrientation="portrait" />
 
-        <activity android:name="com.qq.e.ads.LandscapeADActivity" 
-            android:screenOrientation="landscape" 
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize" />
+        <activity
+          android:name="com.qq.e.tg.LandscapeADActivity"
+          android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+          android:screenOrientation="landscape" />
 
         <activity
             android:name=".SplashActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".TTSplashActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".TTFullScreenVideoActivity"
             android:screenOrientation="portrait" />
 
     </application>

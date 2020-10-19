@@ -76,7 +76,7 @@ public class SplashActivity extends Activity implements SplashADListener {
       checkAndRequestPermission();
     } else {
       // 如果是Android6.0以下的机器，默认在安装时获得了所有权限，可以直接调用SDK
-      fetchSplashAD(this, container, skipView, appKey, placementId, this, 0);
+      fetchSplashAD(this, container, skipView, placementId, this, 0);
     }
   }
 
@@ -104,7 +104,7 @@ public class SplashActivity extends Activity implements SplashADListener {
 
     // 权限都已经有了，那么直接调用SDK
     if (lackedPermission.size() == 0) {
-      fetchSplashAD(this, container, skipView, appKey, placementId, this, 0);
+      fetchSplashAD(this, container, skipView, placementId, this, 0);
     } else {
       // 请求所缺少的权限，在onRequestPermissionsResult中再看是否获得权限，如果获得权限就可以调用SDK，否则不要调用SDK。
       String[] requestPermissions = new String[lackedPermission.size()];
@@ -126,7 +126,7 @@ public class SplashActivity extends Activity implements SplashADListener {
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (requestCode == 1024 && hasAllPermissionsGranted(grantResults)) {
-      fetchSplashAD(this, container, skipView, appKey, placementId, this, 0);
+      fetchSplashAD(this, container, skipView, placementId, this, 0);
     } else {
       // 如果用户没有授权，那么应该说明意图，引导用户去设置里面授权。
       Toast.makeText(this, "应用缺少必要的权限！请点击\"权限\"，打开所需要的权限。", Toast.LENGTH_LONG).show();
@@ -143,15 +143,14 @@ public class SplashActivity extends Activity implements SplashADListener {
    * @param activity        展示广告的activity
    * @param adContainer     展示广告的大容器
    * @param skipContainer   自定义的跳过按钮：传入该view给SDK后，SDK会自动给它绑定点击跳过事件。SkipView的样式可以由开发者自由定制，其尺寸限制请参考activity_splash.xml或者接入文档中的说明。
-   * @param appId           应用ID
    * @param posId           广告位ID
    * @param adListener      广告状态监听器
    * @param fetchDelay      拉取广告的超时时长：取值范围[3000, 5000]，设为0表示使用广点通SDK默认的超时时长。
    */
   private void fetchSplashAD(Activity activity, ViewGroup adContainer, View skipContainer,
-      String appId, String posId, SplashADListener adListener, int fetchDelay) {
+      String posId, SplashADListener adListener, int fetchDelay) {
     fetchSplashADTime = System.currentTimeMillis();
-    splashAD = new SplashAD(activity, skipContainer, appId, posId, adListener, fetchDelay);
+    splashAD = new SplashAD(activity, skipContainer, posId, adListener, fetchDelay);
     splashAD.fetchAndShowIn(adContainer);
   }
 
@@ -200,6 +199,9 @@ public class SplashActivity extends Activity implements SplashADListener {
         "AD_DEMO",
         String.format("LoadSplashADFail, eCode=%d, errorMsg=%s", error.getErrorCode(),
             error.getErrorMsg()));
+
+    AdHelper.sendEventWithSplashFailed();
+
     /**
      * 为防止无广告时造成视觉上类似于"闪退"的情况，设定无广告时页面跳转根据需要延迟一定时间，demo
      * 给出的延时逻辑是从拉取广告开始算开屏最少持续多久，仅供参考，开发者可自定义延时逻辑，如果开发者采用demo
