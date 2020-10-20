@@ -9,8 +9,8 @@
 #import "RNAdPoly.h"
 #import "GDTSplashAd.h"
 #import <Masonry/Masonry.h>
-//#import <SDWebImage/UIImageView+WebCache.h>
-//@import InMobiSDK;
+#import <BUAdSDK/BUAdSDKManager.h>
+#import <BUAdSDK/BUSplashAdView.h>
 
 static RNAdPoly *_instance = nil;
 
@@ -20,10 +20,11 @@ typedef NS_ENUM(NSInteger, AdSplashType)
     AdSplashType_BAIDU,
 };
 
-@interface RNAdPoly ()<GDTSplashAdDelegate/*, IMNativeDelegate*/>
+@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate>
 @property (nonatomic, strong) GDTSplashAd *gdtSplash;
-@property (nonatomic, strong) UIView *customSplashView;
+//@property (nonatomic, strong) UIView *customSplashView;
 @property (nonatomic, strong) UIView *bottomView;
+@property (nonatomic, strong) BUSplashAdView *buSplash;
 
 //@property (nonatomic, strong) IMNative* nativeAd;
 //@property (nonatomic, strong) NSString* nativeContent;
@@ -129,12 +130,12 @@ RCT_EXPORT_MODULE();
     }];
 }
 
-- (void)showGdtSplash:(NSString*)appKey withPlacementId:(NSString*)placementId
+- (void)showGdtSplash:(NSString*)placementId
 {
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
     
     //开屏广告初始化并展示代码
-    self.gdtSplash = [[GDTSplashAd alloc] initWithAppId:appKey placementId:placementId];
+    self.gdtSplash = [[GDTSplashAd alloc] initWithPlacementId:placementId];
     self.gdtSplash.delegate = self;
     
     if ([[UIScreen mainScreen] bounds].size.height >= 568.0f)
@@ -146,9 +147,21 @@ RCT_EXPORT_MODULE();
         self.gdtSplash.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"LaunchImage"]];
     }
     self.gdtSplash.fetchDelay = 3; //开发者可以设置开屏拉取时间，超时则放弃展示 //[可选]拉取并展示全屏开屏广告
-    //[splashAd loadAdAndShowInWindow:self.window]; //设置开屏底部自定义LogoView，展示半屏开屏广告
     
     [self.gdtSplash loadAdAndShowInWindow:window withBottomView:self.bottomView];
+}
+
+- (void)showBUSplash:(NSString*)placementId;
+{
+    CGRect frame = [UIScreen mainScreen].bounds;
+    self.buSplash = [[BUSplashAdView alloc] initWithSlotID:placementId frame:frame];
+    self.buSplash.tolerateTimeout = 10;
+    self.buSplash.delegate = self;
+    
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    [window.rootViewController.view addSubview:self.buSplash];
+    self.buSplash.rootViewController = window.rootViewController;
+    [self.buSplash loadAdData];
 }
 
 #if 0
@@ -274,6 +287,24 @@ RCT_EXPORT_MODULE();
 }
 #endif
 
+RCT_EXPORT_METHOD(init:(NSString*)type
+                  appKey:(NSString*)appKey)
+{
+    if ([type isEqual:@"gdt"])
+    {
+        [GDTSDKConfig registerAppId:appKey];
+        [GDTSDKConfig enableGPS:YES];
+    }
+    else if ([type isEqual:@"bu"])
+    {
+        [BUAdSDKManager setAppID:appId];
+#if DEBUG
+        [BUAdSDKManager setLoglevel:BUAdSDKLogLevelDebug];
+#endif
+        [BUAdSDKManager setIsPaidApp:NO];
+    }
+}
+
 RCT_EXPORT_METHOD(showSplash:(NSString*)type
                   appKey:(NSString*)appKey
                   placementId:(NSString*)placementId)
@@ -288,11 +319,11 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
         
         if ([type isEqual:@"gdt"])
         {
-            [manager showGdtSplash:appKey withPlacementId:placementId];
+            [manager showGdtSplash:placementId];
         }
-        else if ([type isEqual:@"baidu"])
+        else if ([type isEqual:@"bu"])
         {
-            //[manager showBaiduSplash:appKey withPublisherId:placementId];
+            [manager showBUSplash:placementId];
         }
     });
 }
@@ -341,6 +372,25 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
         self.gdtSplash.delegate = nil;
         self.gdtSplash = nil;
     }
+}
+
+#pragma mark delegate
+
+- (void)splashAdDidClose:(BUSplashAdView *)splashAd
+{
+    [splashAd removeFromSuperview];
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)splashAd:(BUSplashAdView *)splashAd didFailWithError:(NSError *)error
+{
+    [splashAd removeFromSuperview];
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)splashAdWillVisible:(BUSplashAdView *)splashAd
+{
+    NSLog(@"%s",__FUNCTION__);
 }
 
 @end
