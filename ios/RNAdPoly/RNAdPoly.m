@@ -7,7 +7,8 @@
 //
 
 #import "RNAdPoly.h"
-#import "GDTSplashAd.h"
+#import <GDTSplashAd.h>
+#import <GDTSDKConfig.h>
 #import <Masonry/Masonry.h>
 #import <BUAdSDK/BUAdSDKManager.h>
 #import <BUAdSDK/BUSplashAdView.h>
@@ -151,11 +152,11 @@ RCT_EXPORT_MODULE();
     [self.gdtSplash loadAdAndShowInWindow:window withBottomView:self.bottomView];
 }
 
-- (void)showBUSplash:(NSString*)placementId;
+- (void)showBuSplash:(NSString*)placementId;
 {
     CGRect frame = [UIScreen mainScreen].bounds;
     self.buSplash = [[BUSplashAdView alloc] initWithSlotID:placementId frame:frame];
-    self.buSplash.tolerateTimeout = 10;
+    self.buSplash.tolerateTimeout = 3;
     self.buSplash.delegate = self;
     
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
@@ -164,140 +165,18 @@ RCT_EXPORT_MODULE();
     [self.buSplash loadAdData];
 }
 
-#if 0
-- (void)showInmobiSplash
-{
-    self.nativeAd = [[IMNative alloc] initWithPlacementId:1498527731848];
-    self.nativeAd.delegate = self;
-    [self.nativeAd load];
-    
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
-    UIView *customSplashView = [[UIView alloc] initWithFrame:window.frame];
-    customSplashView.backgroundColor = [UIColor whiteColor];
-    [window addSubview:customSplashView];
-    
-    CGFloat screenWidth = window.frame.size.width;
-    CGFloat screenHeight = window.frame.size.height;
-    
-    CGFloat bottomHeight = screenHeight / 6;
-    NSURL *url = [NSURL URLWithString:@"http://i.l.inmobicdn.net/assets/e6448d567652405fbcfe7a25db184580.jpeg"];
-    UIImageView *screenshotsView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, screenWidth, screenHeight - bottomHeight)];
-    [screenshotsView sd_setImageWithURL:url];
-    //screenshotsView.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
-    [customSplashView addSubview:screenshotsView];
-    
-    self.skipButton = [[UIButton alloc] init];
-    self.skipButton.titleLabel.font = [UIFont systemFontOfSize:14.0];
-    [self.skipButton setTitle:@"跳过" forState:UIControlStateNormal];
-    self.skipButton.layer.cornerRadius = 14;
-    self.skipButton.layer.borderColor = [UIColor redColor].CGColor;
-    self.skipButton.layer.borderWidth = 1.0f;
-    self.skipButton.contentEdgeInsets = UIEdgeInsetsMake(6, 12, 6, 12);
-    
-    [customSplashView addSubview:self.skipButton];
-    [self.skipButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.top.equalTo(screenshotsView.mas_top).with.offset(30);
-        make.right.equalTo(screenshotsView.mas_right).with.offset(-10);
-    }];
-    
-    
-    
-    UIView *bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, screenHeight - bottomHeight, screenWidth, bottomHeight)];
-    bottomView.backgroundColor = [UIColor whiteColor];
-    CALayer *upperBorder = [CALayer layer];
-    upperBorder.backgroundColor = [[UIColor colorWithRed:200.f/255.f
-                                                   green:199.f/255.f
-                                                    blue:204.f/255.f
-                                                   alpha:1] CGColor];
-    upperBorder.frame = CGRectMake(0, 0, screenWidth, 0.5f);
-    [bottomView.layer addSublayer:upperBorder];
-    
-    UIImageView *imageView = [[UIImageView alloc] init];
-    NSURL *url2 = [NSURL URLWithString:@"http://i.l.inmobicdn.net/assets/f5b9fec4b51b4160a80ca72bf283484b.png"];
-    imageView.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url2]];
-    [bottomView addSubview:imageView];
-    
-    UILabel *appNameLabel = [[UILabel alloc] init];
-    appNameLabel.text = @"Sample TPCT";
-    appNameLabel.font = [UIFont systemFontOfSize:22];
-    appNameLabel.textAlignment = NSTextAlignmentLeft;
-    [bottomView addSubview:appNameLabel];
-    
-    UILabel *sloganLabel = [[UILabel alloc] init];
-    sloganLabel.text = @"This is a sample ad to demonstrate the use of conversion tracker";
-    sloganLabel.font = [UIFont systemFontOfSize:14];
-    sloganLabel.textColor = [UIColor colorWithRed:85.f/255.f
-                                            green:87.f/255.f
-                                             blue:85.f/255.f
-                                            alpha:1];
-    sloganLabel.textAlignment = NSTextAlignmentLeft;
-    [bottomView addSubview:sloganLabel];
-    
-    [imageView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.equalTo(@50);
-        make.width.equalTo(@50);
-        make.centerY.equalTo(bottomView.mas_centerY);
-        make.centerX.equalTo(bottomView.mas_centerX).with.offset(-60);
-    }];
-    
-    [appNameLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.top.equalTo(imageView.mas_top).with.offset(4);
-        make.left.equalTo(imageView.mas_right).with.offset(10);
-    }];
-    
-    [sloganLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.top.equalTo(appNameLabel.mas_bottom).with.offset(-1);
-        make.left.equalTo(appNameLabel.mas_left);
-    }];
-    
-    [customSplashView addSubview:bottomView];
-    
-    [self startCountdown];
-}
-
-- (void)startCountdown
-{
-    __block NSInteger timeout = 5;
-    
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    dispatch_source_t _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
-    dispatch_source_set_timer(_timer, dispatch_walltime(NULL, 0), 1.0 * NSEC_PER_SEC, 0);
-    dispatch_source_set_event_handler(_timer, ^{
-        if(timeout <= 0 )
-        {
-            dispatch_source_cancel(_timer);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
-            });
-        }
-        else
-        {
-            NSString *strTime = [NSString stringWithFormat:@"%.2ld | 跳过", (long)timeout];
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.skipButton setTitle:strTime forState:UIControlStateNormal];
-                self.skipButton.enabled = NO;
-            });
-            
-            timeout--;
-        }
-    });
-    
-    dispatch_resume(_timer);
-}
-#endif
-
 RCT_EXPORT_METHOD(init:(NSString*)type
                   appKey:(NSString*)appKey)
 {
+    NSLog(@"init type: %@, appKey: %@", type, appKey);
     if ([type isEqual:@"gdt"])
     {
         [GDTSDKConfig registerAppId:appKey];
         [GDTSDKConfig enableGPS:YES];
     }
-    else if ([type isEqual:@"bu"])
+    else if ([type isEqual:@"tt"])
     {
-        [BUAdSDKManager setAppID:appId];
+        [BUAdSDKManager setAppID:appKey];
 #if DEBUG
         [BUAdSDKManager setLoglevel:BUAdSDKLogLevelDebug];
 #endif
@@ -312,6 +191,7 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
     dispatch_async(dispatch_get_main_queue(), ^{
         RNAdPoly *manager = [RNAdPoly sharedInstance];
         
+        NSLog(@"showSplash type: %@, placementId: %@", type, placementId);
         if (!self.bottomView)
         {
             [manager drawBottomView];
@@ -321,9 +201,9 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
         {
             [manager showGdtSplash:placementId];
         }
-        else if ([type isEqual:@"bu"])
+        else if ([type isEqual:@"tt"])
         {
-            [manager showBUSplash:placementId];
+            [manager showBuSplash:placementId];
         }
     });
 }
@@ -385,7 +265,8 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
 - (void)splashAd:(BUSplashAdView *)splashAd didFailWithError:(NSError *)error
 {
     [splashAd removeFromSuperview];
-    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"%s%@",__FUNCTION__,error);
+    [self sendEventWithName:@"ShowSplashFailed" body:nil];
 }
 
 - (void)splashAdWillVisible:(BUSplashAdView *)splashAd
