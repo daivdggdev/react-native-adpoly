@@ -16,5 +16,5 @@ Pod::Spec.new do |s|
   s.dependency 'React'
   s.dependency 'Masonry'
   s.dependency 'GDTMobSDK'
-  s.dependency 'Bytedance-UnionAD'
+  s.dependency 'Ads-CN'
 end

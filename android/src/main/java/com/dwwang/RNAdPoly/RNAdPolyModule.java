@@ -35,7 +35,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void init(String type, String appId) {
+    public void init(String type, final String appId) {
         Log.i("AD_DEMO", "init type = " + type);
         if (type.equals("gdt")) {
             GDTADManager.getInstance().initWith(this.context, appId);
@@ -44,7 +44,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             Runnable myRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    TTAdManagerHolder.init(this.context, appId);
+                    TTAdManagerHolder.init(context, appId);
                 }
             };
 

@@ -7,6 +7,8 @@
 //
 
 #import "RNAdPoly.h"
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#import <AdSupport/AdSupport.h>
 #import <GDTSplashAd.h>
 #import <GDTSDKConfig.h>
 #import <Masonry/Masonry.h>
@@ -154,15 +156,20 @@ RCT_EXPORT_MODULE();
 
 - (void)showBuSplash:(NSString*)placementId;
 {
+  [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+    // Tracking authorization completed. Start loading ads here.
+    // [self loadAd];
     CGRect frame = [UIScreen mainScreen].bounds;
     self.buSplash = [[BUSplashAdView alloc] initWithSlotID:placementId frame:frame];
-    self.buSplash.tolerateTimeout = 3;
+    self.buSplash.tolerateTimeout = 3.5;
     self.buSplash.delegate = self;
+    self.buSplash.needSplashZoomOutAd = YES;
     
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
     [window.rootViewController.view addSubview:self.buSplash];
     self.buSplash.rootViewController = window.rootViewController;
     [self.buSplash loadAdData];
+  }];
 }
 
 RCT_EXPORT_METHOD(init:(NSString*)type
@@ -180,7 +187,7 @@ RCT_EXPORT_METHOD(init:(NSString*)type
 #if DEBUG
         [BUAdSDKManager setLoglevel:BUAdSDKLogLevelDebug];
 #endif
-        [BUAdSDKManager setIsPaidApp:NO];
+        [BUAdSDKManager setCoppa:0];
     }
 }
 
