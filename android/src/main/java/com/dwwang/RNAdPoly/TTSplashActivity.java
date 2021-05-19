@@ -39,8 +39,8 @@ public class TTSplashActivity extends Activity {
     private long fetchSplashADTime = 0;
     private Handler handler = new Handler(Looper.getMainLooper());
 
-    //开屏广告加载超时时间,建议大于3000,这里为了冷启动第一次加载到广告并且展示,示例设置了3000ms
-    private static final int AD_TIME_OUT = 3000;
+    //开屏广告加载超时时间,建议大于3500,这里为了冷启动第一次加载到广告并且展示,示例设置了3500ms
+    private static final int AD_TIME_OUT = 3500;
     private String mCodeId = "";
     private boolean mIsExpress = false; //是否请求模板广告
 
