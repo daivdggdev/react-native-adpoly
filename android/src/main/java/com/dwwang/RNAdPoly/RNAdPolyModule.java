@@ -9,8 +9,10 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.lang.Runnable;
 import android.util.Log;
 import android.net.Uri;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.ViewGroup;
 import android.content.Intent;
@@ -38,7 +40,15 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         if (type.equals("gdt")) {
             GDTADManager.getInstance().initWith(this.context, appId);
         } else if (type.equals("tt")) {
-            TTAdManagerHolder.init(this.context, appId);
+            Handler mainHandler = new Handler(this.context.getMainLooper());
+            Runnable myRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    TTAdManagerHolder.init(this.context, appId);
+                }
+            };
+
+            mainHandler.post(myRunnable);
         }
     }
 
