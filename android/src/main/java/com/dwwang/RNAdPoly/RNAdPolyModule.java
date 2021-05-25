@@ -51,7 +51,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void showSplash(String type, String appKey, String placementId) {
+    public void showSplash(String type, final String appKey, final String placementId) {
         Log.i("AD_DEMO", "type = " + type);
         if (type.equals("gdt")) {
             if (!GDTAdManagerHolder.isInitSuccess()) {
@@ -67,13 +67,12 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                 Runnable myRunnable = new Runnable() {
                     @Override
                     public void run() {
-                        TTAdManagerHolder.init(context, appId);
+                        TTAdManagerHolder.init(context, appKey);
                         showTTSplash(placementId);
                     }
                 };
                 mainHandler.post(myRunnable);
             }
-            
         }
     }
 
