@@ -17,8 +17,6 @@ import android.text.TextUtils;
 import android.view.ViewGroup;
 import android.content.Intent;
 
-import com.qq.e.comm.managers.GDTADManager;
-
 public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     ReactApplicationContext context;
@@ -37,28 +35,45 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void init(String type, final String appId) {
         Log.i("AD_DEMO", "init type = " + type);
-        if (type.equals("gdt")) {
-            GDTADManager.getInstance().initWith(this.context, appId);
-        } else if (type.equals("tt")) {
-            Handler mainHandler = new Handler(this.context.getMainLooper());
-            Runnable myRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    TTAdManagerHolder.init(context, appId);
-                }
-            };
+        // if (type.equals("gdt")) {
+        //     GDTADManager.getInstance().initWith(this.context, appId);
+        // } else if (type.equals("tt")) {
+        //     Handler mainHandler = new Handler(this.context.getMainLooper());
+        //     Runnable myRunnable = new Runnable() {
+        //         @Override
+        //         public void run() {
+        //             TTAdManagerHolder.init(context, appId);
+        //         }
+        //     };
 
-            mainHandler.post(myRunnable);
-        }
+        //     mainHandler.post(myRunnable);
+        // }
     }
 
     @ReactMethod
     public void showSplash(String type, String appKey, String placementId) {
         Log.i("AD_DEMO", "type = " + type);
         if (type.equals("gdt")) {
+            if (!GDTAdManagerHolder.isInitSuccess()) {
+                GDTAdManagerHolder.init(context, appKey);
+            }
+            
             showGdtSplash(appKey, placementId);
         } else if (type.equals("tt")) {
-            showTTSplash(placementId);
+            if (TTAdManagerHolder.isInitSuccess()) {
+                showTTSplash(placementId);
+            } else {
+                Handler mainHandler = new Handler(this.context.getMainLooper());
+                Runnable myRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        TTAdManagerHolder.init(context, appId);
+                        showTTSplash(placementId);
+                    }
+                };
+                mainHandler.post(myRunnable);
+            }
+            
         }
     }
 
