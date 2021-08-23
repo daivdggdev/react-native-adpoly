@@ -7,6 +7,10 @@ function init(type, appKey) {
   RNAdPoly.init(type, appKey);
 }
 
+function requestPermissionIfNecessary() {
+  RNAdPoly.requestPermissionIfNecessary();
+}
+
 function showSplash(type, appKey, placementId) {
   RNAdPoly.showSplash(type, appKey, placementId);
 }
@@ -16,7 +20,8 @@ function showFullScreenVideo(type, appKey, placementId) {
 }
 
 module.exports = {
-  init: init,
-  showSplash: showSplash,
-  showFullScreenVideo: showFullScreenVideo,
+  init,
+  requestPermissionIfNecessary,
+  showSplash,
+  showFullScreenVideo,
 };

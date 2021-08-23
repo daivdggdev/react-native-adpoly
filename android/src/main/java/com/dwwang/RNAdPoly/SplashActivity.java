@@ -72,12 +72,12 @@ public class SplashActivity extends Activity implements SplashADListener {
     }
 
     // 如果targetSDKVersion >= 23，就要申请好权限。如果您的App没有适配到Android6.0（即targetSDKVersion < 23），那么只需要在这里直接调用fetchSplashAD接口。
-    if (Build.VERSION.SDK_INT >= 23) {
-      checkAndRequestPermission();
-    } else {
+    // if (Build.VERSION.SDK_INT >= 23) {
+    //   checkAndRequestPermission();
+    // } else {
       // 如果是Android6.0以下的机器，默认在安装时获得了所有权限，可以直接调用SDK
       fetchSplashAD(this, container, skipView, placementId, this, 0);
-    }
+    // }
   }
 
   /**
@@ -96,6 +96,10 @@ public class SplashActivity extends Activity implements SplashADListener {
     List<String> lackedPermission = new ArrayList<String>();
     if (!(checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)) {
       lackedPermission.add(Manifest.permission.READ_PHONE_STATE);
+    }
+
+    if (!(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+      lackedPermission.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
 
     if (!(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)) {

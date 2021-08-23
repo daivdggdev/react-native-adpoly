@@ -51,6 +51,14 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void requestPermissionIfNecessary() {
+        Log.i("AD_DEMO", "requestPermissionIfNecessary");
+        //在合适的时机申请权限，如read_phone_state,防止获取不了imei时候，下载类广告没有填充的问题
+        //在开屏时候申请不太合适，因为该页面倒计时结束或者请求超时会跳转，在该页面申请权限，体验不好
+        TTAdManagerHolder.get().requestPermissionIfNecessary(this);
+    }
+
+    @ReactMethod
     public void showSplash(String type, final String appKey, final String placementId) {
         Log.i("AD_DEMO", "type = " + type);
         if (type.equals("gdt")) {
