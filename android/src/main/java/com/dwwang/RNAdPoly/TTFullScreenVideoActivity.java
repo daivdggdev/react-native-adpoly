@@ -169,6 +169,10 @@ public class TTFullScreenVideoActivity extends Activity {
 
             @Override
             public void onFullScreenVideoCached() {
+            }
+
+            @Override
+            public void onFullScreenVideoCached(TTFullScreenVideoAd ad) {
                 Log.i(TAG, "Callback --> onFullScreenVideoCached");
                 if (mttFullVideoAd != null) {
                     //step6:在获取到广告后展示
