@@ -3,20 +3,32 @@
 var RNAdPoly = require('react-native').NativeModules.RNAdPoly;
 var IsAndroid = RNAdPoly.IsAndroid;
 
-function init(type, appKey) {
-  RNAdPoly.init(type, appKey);
+function init(appId, appKey) {
+  RNAdPoly.init(appId, appKey);
 }
 
 function requestPermissionIfNecessary() {
   RNAdPoly.requestPermissionIfNecessary();
 }
 
-function showSplash(type, appKey, placementId) {
-  RNAdPoly.showSplash(type, appKey, placementId);
+function showSplash(placementId) {
+  RNAdPoly.showSplash(placementId);
 }
 
 function showFullScreenVideo(type, appKey, placementId) {
   RNAdPoly.showFullScreenVideo(type, appKey, placementId);
+}
+
+function loadRewardVideo(placementId) {
+  RNAdPoly.loadRewardVideo(placementId);
+}
+
+function isRewardAdReady() {
+  RNAdPoly.isRewardAdReady();
+}
+
+function showRewardVideo() {
+  RNAdPoly.showRewardVideo();
 }
 
 module.exports = {
@@ -24,4 +36,7 @@ module.exports = {
   requestPermissionIfNecessary,
   showSplash,
   showFullScreenVideo,
+  loadRewardVideo,
+  isRewardAdReady,
+  showRewardVideo
 };

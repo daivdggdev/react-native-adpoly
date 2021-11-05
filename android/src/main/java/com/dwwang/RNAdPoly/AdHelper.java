@@ -13,15 +13,19 @@ public class AdHelper {
 
 	public static void sendEventWithSplashFailed() {
 		sendEvent("ShowSplashFailed", null);
-  	}
+  }
 
-  	public static void sendEvent(String eventName, @Nullable WritableMap params) {
+	public static void sendEventWithReward() {
+		sendEvent("onReward", null);
+  }
+
+	public static void sendEvent(String eventName, @Nullable WritableMap params) {
 		if (reactContext == null) {
 			return;
 		}
 
 		reactContext
-		  .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-		  .emit(eventName, params);
-  	}
+			.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+			.emit(eventName, params);
+	}
 }
