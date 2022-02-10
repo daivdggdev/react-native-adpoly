@@ -27,7 +27,8 @@ import com.anythink.core.api.ATNetworkConfirmInfo;
 import com.anythink.core.api.AdError;
 import com.anythink.network.gdt.GDTDownloadFirmInfo;
 import com.anythink.splashad.api.ATSplashAd;
-import com.anythink.splashad.api.ATSplashExListenerWithConfirmInfo;
+import com.anythink.splashad.api.ATSplashAdListener;
+// import com.anythink.splashad.api.ATSplashExListenerWithConfirmInfo;
 import com.anythink.splashad.api.ATSplashSkipAdListener;
 import com.anythink.splashad.api.ATSplashSkipInfo;
 import com.anythink.splashad.api.IATSplashEyeAd;
@@ -38,7 +39,7 @@ import com.dwwang.RNAdPoly.zoomout.SplashZoomOutManager;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ATSplashActivity extends Activity implements ATSplashExListenerWithConfirmInfo {
+public class ATSplashActivity extends Activity implements ATSplashAdListener {
 
     private static final String TAG = "ATSplashActivity";
 
@@ -122,15 +123,18 @@ public class ATSplashActivity extends Activity implements ATSplashExListenerWith
     }
 
     @Override
-    public void onAdLoaded() {
+    public void onAdLoaded(boolean isTimeout) {
         Log.i(TAG, "onAdLoaded---------");
 
-        if (isCustomSkipView) {
-            showAdWithCustomSkipView();
-        } else {
-            splashAd.show(this, container);
+        if (!isTimeout) {
+            if (isCustomSkipView) {
+                showAdWithCustomSkipView();
+            } else {
+                splashAd.show(this, container);
+            }
+        }else{
+            Log.i(TAG,"onAdLoaded isTimeout");
         }
-
     }
 
     private void showAdWithCustomSkipView() {
@@ -237,19 +241,18 @@ public class ATSplashActivity extends Activity implements ATSplashExListenerWith
         if (splashAd != null) {
             splashAd.onDestory();
         }
-
     }
 
-    @Override
-    public void onDownloadConfirm(Context context, ATAdInfo adInfo, ATNetworkConfirmInfo networkConfirmInfo) {
-        /**
-         * Only for GDT
-         */
-        // if (networkConfirmInfo instanceof GDTDownloadFirmInfo) {
-        //     //Open Dialog view
-        //     new DownloadApkConfirmDialogWebView(context, ((GDTDownloadFirmInfo) networkConfirmInfo).appInfoUrl, ((GDTDownloadFirmInfo) networkConfirmInfo).confirmCallBack).show();
-        //     Log.i(TAG, "nonDownloadConfirm open confirm dialog");
-        // }
-    }
+    // @Override
+    // public void onDownloadConfirm(Context context, ATAdInfo adInfo, ATNetworkConfirmInfo networkConfirmInfo) {
+    //     /**
+    //      * Only for GDT
+    //      */
+    //     if (networkConfirmInfo instanceof GDTDownloadFirmInfo) {
+    //         //Open Dialog view
+    //         new DownloadApkConfirmDialogWebView(context, ((GDTDownloadFirmInfo) networkConfirmInfo).appInfoUrl, ((GDTDownloadFirmInfo) networkConfirmInfo).confirmCallBack).show();
+    //         Log.i(TAG, "nonDownloadConfirm open confirm dialog");
+    //     }
+    // }
 
 }

@@ -67,12 +67,12 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
         ATSDK.integrationChecking(context);//检查广告平台的集成状态
         //(v5.7.77新增) 打印当前设备的设备信息(IMEI、OAID、GAID、AndroidID等)
-        ATSDK.testModeDeviceInfo(context, new DeviceInfoCallback() {
-            @Override
-            public void deviceInfo(String deviceInfo) {
-                Log.i("AD_DEMO", "deviceInfo: " + deviceInfo);
-            }
-        });
+        // ATSDK.testModeDeviceInfo(context, new DeviceInfoCallback() {
+        //     @Override
+        //     public void deviceInfo(String deviceInfo) {
+        //         Log.i("AD_DEMO", "deviceInfo: " + deviceInfo);
+        //     }
+        // });
 
 
         ATSDK.init(context, appId, appKey);//初始化SDK
@@ -95,7 +95,6 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
         ReactApplicationContext context = getReactApplicationContext();
         Intent intent = new Intent(context, ATSplashActivity.class);
-        intent.putExtra("appKey", appKey);
         intent.putExtra("placementId", placementId);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
@@ -125,7 +124,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void loadRewardVideo(String placementId) {
-        Log.i("AD_DEMO", "type = " + type);
+        Log.i("AD_DEMO", "loadRewardVideo placementId = " + placementId);
 
         if (mRewardVideoAd == null) {
             mRewardVideoAd = new ATRewardVideoAd(context, placementId);
@@ -176,6 +175,14 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                 public void onReward(ATAdInfo entity) {
                     Log.e(TAG, "onReward:\n" + entity.toString());
                     AdHelper.sendEventWithReward();
+                }
+
+                @Override
+                public void onDownloadConfirm(Context context, ATAdInfo atAdInfo, ATNetworkConfirmInfo networkConfirmInfo) {
+                    // if (networkConfirmInfo instanceof GDTDownloadFirmInfo) {
+                    //     //二次弹窗处理，DownloadApkConfirmDialogWebView是Demo中的类文件，具体实现可查看Demo
+                    //     new DownloadApkConfirmDialogWebView(context, ((GDTDownloadFirmInfo) networkConfirmInfo).appInfoUrl, ((GDTDownloadFirmInfo) networkConfirmInfo).confirmCallBack).show();
+                    // }
                 }
             });
     
@@ -244,7 +251,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         Log.i("AD_DEMO", "showRewardVideo");
 
         if (mRewardVideoAd.isAdReady()){
-            mRewardVideoAd.show(context);
+            mRewardVideoAd.show((Activity)context);
         } else {
             mRewardVideoAd.load();
         }
