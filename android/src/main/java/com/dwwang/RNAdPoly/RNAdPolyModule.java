@@ -85,10 +85,34 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void loadFullScreenVideo(String type, String appKey, String placementId) {
+        Log.i("AD_DEMO", "loadFullScreenVideo type = " + type);
+        // if (type.equals("tt")) {
+        //     showTTFullScreenVideo(placementId);
+        // }
+    }
+
+    @ReactMethod
     public void showFullScreenVideo(String type, String appKey, String placementId) {
-        Log.i("AD_DEMO", "type = " + type);
+        Log.i("AD_DEMO", "showFullScreenVideo type = " + type);
         if (type.equals("tt")) {
             showTTFullScreenVideo(placementId);
+        }
+    }
+
+    @ReactMethod
+    public void loadRewardVideo(String type, String appKey, String placementId, String rewardName, String rewardAmount) {
+        Log.i("AD_DEMO", "loadRewardVideo type = " + type);
+        // if (type.equals("tt")) {
+        //     showTTFullScreenVideo(placementId);
+        // }
+    }
+
+    @ReactMethod
+    public void showRewardVideo(String type, String appKey, String placementId, String rewardName, String rewardAmount) {
+        Log.i("AD_DEMO", "showFullScreenVideo type = " + type);
+        if (type.equals("tt")) {
+            showTTRewardVideo(placementId, rewardName, rewardAmount);
         }
     }
 
@@ -124,14 +148,22 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     private void showTTFullScreenVideo(String placementId) {
         Log.i("AD_DEMO", "showTTFullScreenVideo placementId = " + placementId);
-        if (TextUtils.isEmpty(placementId)) {
-            return;
-        }
-
         ReactApplicationContext context = getReactApplicationContext();
 
         Intent intent = new Intent(context, TTFullScreenVideoActivity.class);
         intent.putExtra("placementId", placementId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+    private void showTTRewardVideo(String placementId, String rewardName, String rewardAmount) {
+        Log.i("AD_DEMO", "showTTRewardVideo placementId = " + placementId);
+        ReactApplicationContext context = getReactApplicationContext();
+
+        Intent intent = new Intent(context, TTRewardVideoActivity.class);
+        intent.putExtra("placementId", placementId);
+        intent.putExtra("rewardName", rewardName);
+        intent.putExtra("rewardAmount", rewardAmount);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }

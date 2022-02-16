@@ -23,11 +23,14 @@ typedef NS_ENUM(NSInteger, AdSplashType)
     AdSplashType_BAIDU,
 };
 
-@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate>
+@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate, BUNativeExpressFullscreenVideoAdDelegate, BUNativeExpressRewardedVideoAdDelegate>
 @property (nonatomic, strong) GDTSplashAd *gdtSplash;
 //@property (nonatomic, strong) UIView *customSplashView;
 @property (nonatomic, strong) UIView *bottomView;
 @property (nonatomic, strong) BUSplashAdView *buSplash;
+@property (nonatomic, strong) BUNativeExpressFullscreenVideoAd *fullscreenAd;
+@property (nonatomic, strong) BUNativeExpressRewardedVideoAd *rewardedAd;
+@property (nonatomic, strong) BUDExpressRewardedVideoAgainDelegateObj *expressRewardedVideoAgainDelegateObj;
 @property (nonatomic, assign) BOOL sInitGDT;
 @property (nonatomic, assign) BOOL sInitBU;
 
@@ -195,6 +198,43 @@ RCT_EXPORT_MODULE();
     
 }
 
+- (void)loadBUFullscreenVideoAd:(NSString*)placementId
+{
+    self.fullscreenAd = [[BUNativeExpressFullscreenVideoAd alloc] initWithSlotID:placementId];
+    self.fullscreenAd.delegate = self;
+    [self.fullscreenAd loadAdData];
+}
+
+- (void)showBUFullscreenVideoAd
+{
+    if (self.fullscreenAd) {
+        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        [self.fullscreenAd showAdFromRootViewController:rootViewController];
+    }
+}
+
+- (void)loadBURewardVideoAd:(NSString*)placementId 
+                 rewardName:(NSString*)rewardName
+               rewardAmount:(NSInteger)rewardAmount
+{
+    BURewardedVideoModel *model = [[BURewardedVideoModel alloc] init];
+    model.rewardName = rewardName;
+    model.rewardAmount = rewardAmount;
+    self.rewardedAd = [[BUNativeExpressRewardedVideoAd alloc] initWithSlotID:placementId rewardedVideoModel:model];
+    self.rewardedAd.delegate = self;
+    // optional
+    self.rewardedAd.rewardPlayAgainInteractionDelegate = self.expressRewardedVideoAgainDelegateObj;
+    [self.rewardedAd loadAdData];
+}
+
+- (void)showBURewardVideoAd
+{
+    if (self.rewardedAd) {
+        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        [self.rewardedAd showAdFromRootViewController:rootViewController];
+    }
+}
+
 - (void)showGdtSplash:(NSString*)placementId
 {
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
@@ -283,6 +323,66 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
     });
 }
 
+RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
+                  appKey:(NSString*)appKey
+                  placementId:(NSString*)placementId)
+{
+    NSLog(@"loadFullScreenVideo type: %@, placementId: %@", type, placementId);
+    if ([type isEqual:@"gdt"])
+    {
+        // [manager setupGDTAdSDK:appKey];
+    }
+    else if ([type isEqual:@"tt"])
+    {
+        [manager loadBUFullscreenVideoAd:placementId];
+    }
+}
+
+RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type)
+{
+    NSLog(@"showFullScreenVideo type: %@", type);
+    if ([type isEqual:@"gdt"])
+    {
+        // [manager setupGDTAdSDK:appKey];
+    }
+    else if ([type isEqual:@"tt"])
+    {
+        [manager showBUFullscreenVideoAd];
+    }
+}
+
+RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
+                  appKey:(NSString*)appKey
+                  placementId:(NSString*)placementId
+                  rewardName:(NSString*)rewardName
+               rewardAmount:(NSInteger)rewardAmount)
+{
+    NSLog(@"loadRewardVideo type: %@, placementId: %@", type, placementId);
+    if ([type isEqual:@"gdt"])
+    {
+        // [manager setupGDTAdSDK:appKey];
+    }
+    else if ([type isEqual:@"tt"])
+    {
+        [manager loadBURewardVideoAd:placementId 
+                          rewardName:rewardName
+                        rewardAmount:rewardAmount];
+    }
+}
+
+RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
+{
+    NSLog(@"showRewardVideo type: %@", type);
+    if ([type isEqual:@"gdt"])
+    {
+        // [manager setupGDTAdSDK:appKey];
+    }
+    else if ([type isEqual:@"tt"])
+    {
+        [manager showBURewardVideoAd];
+    }
+}
+
 #pragma mark Gdt Splash Delegate
 
 - (void)splashAdSuccessPresentScreen:(GDTSplashAd *)splashAd
@@ -327,6 +427,157 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
         self.gdtSplash.delegate = nil;
         self.gdtSplash = nil;
     }
+}
+
+#pragma mark - BUNativeExpressFullscreenVideoAdDelegate
+- (void)nativeExpressFullscreenVideoAdDidLoad:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAd:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd didFailWithError:(NSError *_Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"%@", error]];
+}
+
+- (void)nativeExpressFullscreenVideoAdViewRenderSuccess:(BUNativeExpressFullscreenVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdViewRenderFail:(BUNativeExpressFullscreenVideoAd *)rewardedVideoAd error:(NSError *_Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"%@", error]];
+}
+
+- (void)nativeExpressFullscreenVideoAdDidDownLoadVideo:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdWillVisible:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdDidVisible:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdDidClick:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdDidClickSkip:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdWillClose:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdDidClose:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdDidPlayFinish:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd didFailWithError:(NSError *_Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdCallback:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd withType:(BUNativeExpressFullScreenAdType) nativeExpressVideoAdType{
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressFullscreenVideoAdDidCloseOtherController:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd interactionType:(BUInteractionType)interactionType {
+    NSString *str;
+    if (interactionType == BUInteractionTypePage) {
+        str = @"ladingpage";
+    } else if (interactionType == BUInteractionTypeVideoAdDetail) {
+        str = @"videoDetail";
+    } else {
+        str = @"appstoreInApp";
+    }
+    [self pbud_logWithSEL:_cmd msg:str];
+}
+
+#pragma mark - Log
+- (void)pbud_logWithSEL:(SEL)sel msg:(NSString *)msg {
+    BUD_Log(@"SDKDemoDelegate BUNativeExpressFullscreenVideoAd In VC (%@) extraMsg:%@", NSStringFromSelector(sel), msg);
+}
+
+#pragma mark - BUNativeExpressRewardedVideoAdDelegate
+- (void)nativeExpressRewardedVideoAdDidLoad:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAd:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd didFailWithError:(NSError *_Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"%@", error]];
+}
+
+- (void)nativeExpressRewardedVideoAdCallback:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd withType:(BUNativeExpressRewardedVideoAdType)nativeExpressVideoType{
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdDidDownLoadVideo:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdViewRenderSuccess:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdViewRenderFail:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd error:(NSError *_Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"%@", error]];
+}
+
+- (void)nativeExpressRewardedVideoAdWillVisible:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdDidVisible:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdWillClose:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdDidClose:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+    self.rewardedAd = nil;
+}
+
+- (void)nativeExpressRewardedVideoAdDidClick:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdDidClickSkip:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)nativeExpressRewardedVideoAdDidPlayFinish:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd didFailWithError:(NSError *_Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"%@", error]];
+}
+
+- (void)nativeExpressRewardedVideoAdServerRewardDidSucceed:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd verify:(BOOL)verify {
+    [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"verify:%@ rewardName:%@ rewardMount:%ld",verify?@"true":@"false",rewardedVideoAd.rewardedVideoModel.rewardName,(long)rewardedVideoAd.rewardedVideoModel.rewardAmount]];
+}
+
+- (void)nativeExpressRewardedVideoAdServerRewardDidFail:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd error:(NSError * _Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"rewardName:%@ rewardMount:%ld error:%@",rewardedVideoAd.rewardedVideoModel.rewardName,(long)rewardedVideoAd.rewardedVideoModel.rewardAmount,error]];
+}
+
+- (void)nativeExpressRewardedVideoAdDidCloseOtherController:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd interactionType:(BUInteractionType)interactionType {
+    NSString *str;
+    if (interactionType == BUInteractionTypePage) {
+        str = @"ladingpage";
+    } else if (interactionType == BUInteractionTypeVideoAdDetail) {
+        str = @"videoDetail";
+    } else {
+        str = @"appstoreInApp";
+    }
+    [self pbud_logWithSEL:_cmd msg:str];
+}
+
+- (BUDExpressRewardedVideoAgainDelegateObj *)expressRewardedVideoAgainDelegateObj {
+    if (!_expressRewardedVideoAgainDelegateObj) {
+        _expressRewardedVideoAgainDelegateObj = [[BUDExpressRewardedVideoAgainDelegateObj alloc] init];
+    }
+    return _expressRewardedVideoAgainDelegateObj;
 }
 
 #pragma mark delegate

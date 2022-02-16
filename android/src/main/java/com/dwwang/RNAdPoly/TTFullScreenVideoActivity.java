@@ -23,9 +23,6 @@ import com.bytedance.sdk.openadsdk.TTFullScreenVideoAd;
 
 public class TTFullScreenVideoActivity extends Activity {
     private static final String TAG = "TTFullScreenVideoActivity";
-    private Button mLoadAd;
-    private Button mLoadAdVertical;
-    private Button mShowAd;
     private TTAdNative mTTAdNative;
     private TTFullScreenVideoAd mttFullVideoAd;
     private String mCodeId = "";
@@ -58,6 +55,7 @@ public class TTFullScreenVideoActivity extends Activity {
             return;
         }
         String codeId = intent.getStringExtra("placementId");
+        mIsExpress = intent.getBooleanExtra("is_express", false);
         if (!TextUtils.isEmpty(codeId)){
             mCodeId = codeId;
         }
@@ -74,6 +72,9 @@ public class TTFullScreenVideoActivity extends Activity {
                     .setCodeId(codeId)
                     //模板广告需要设置期望个性化模板广告的大小,单位dp,全屏视频场景，只要设置的值大于0即可
                     .setExpressViewAcceptedSize(500,500)
+                    .setSupportDeepLink(true)
+                    .setOrientation(orientation)//必填参数，期望视频的播放方向：TTAdConstant.HORIZONTAL 或 TTAdConstant.VERTICAL
+                    .setAdLoadType(TTAdLoadType.LOAD)//推荐使用，用于标注此次的广告请求用途为预加载（当做缓存）还是实时加载，方便后续为开发者优化相关策略
                     .build();
 
         } else {
