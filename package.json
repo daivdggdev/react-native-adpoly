@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublishOnly": "npm run np",
-    "np": "np --no-cleanup --yolo --no-publish",
+    "np": "np --no-cleanup --yolo --no-publish --any-branch",
     "pub": "npm publish --registry https://registry.npmjs.org"
   },
   "repository": {
