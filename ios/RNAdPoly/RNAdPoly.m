@@ -14,6 +14,9 @@
 #import <Masonry/Masonry.h>
 #import <BUAdSDK/BUAdSDKManager.h>
 #import <BUAdSDK/BUSplashAdView.h>
+#import <BUAdSDK/BUNativeExpressFullscreenVideoAd.h>
+#import <BUAdSDK/BUNativeExpressRewardedVideoAd.h>
+#import <BUAdSDK/BURewardedVideoModel.h>
 
 static RNAdPoly *_instance = nil;
 
@@ -30,7 +33,6 @@ typedef NS_ENUM(NSInteger, AdSplashType)
 @property (nonatomic, strong) BUSplashAdView *buSplash;
 @property (nonatomic, strong) BUNativeExpressFullscreenVideoAd *fullscreenAd;
 @property (nonatomic, strong) BUNativeExpressRewardedVideoAd *rewardedAd;
-@property (nonatomic, strong) BUDExpressRewardedVideoAgainDelegateObj *expressRewardedVideoAgainDelegateObj;
 @property (nonatomic, assign) BOOL sInitGDT;
 @property (nonatomic, assign) BOOL sInitBU;
 
@@ -148,7 +150,6 @@ RCT_EXPORT_MODULE();
     }
 
     [GDTSDKConfig registerAppId:appKey];
-    [GDTSDKConfig enableGPS:YES];
     self.sInitGDT = YES;
 }
 
@@ -160,16 +161,10 @@ RCT_EXPORT_MODULE();
         return;
     }
     
-    NSInteger territory = [[NSUserDefaults standardUserDefaults]integerForKey:@"territory"];
-    BOOL isNoCN = (territory > 0 && territory != BUAdSDKTerritory_CN);
-    
-    BUAdSDKConfiguration *configuration = [BUAdSDKConfiguration configuration];
-    configuration.territory = isNoCN ? BUAdSDKTerritory_NO_CN : BUAdSDKTerritory_CN;
-    configuration.GDPR = @(0);
-    configuration.coppa = @(0);
-    configuration.CCPA = @(1);
-    configuration.logLevel = BUAdSDKLogLevelVerbose;
-    configuration.appID = appKey;
+    [BUAdSDKManager setAppID:appKey];
+    [BUAdSDKManager setLoglevel:BUAdSDKLogLevelVerbose];
+    [BUAdSDKManager setCoppa:0];
+    [BUAdSDKManager setGDPR:0];
     [BUAdSDKManager startWithAsyncCompletionHandler:^(BOOL success, NSError *error) {
         self.sInitBU = success;
     }];
@@ -222,8 +217,6 @@ RCT_EXPORT_MODULE();
     model.rewardAmount = rewardAmount;
     self.rewardedAd = [[BUNativeExpressRewardedVideoAd alloc] initWithSlotID:placementId rewardedVideoModel:model];
     self.rewardedAd.delegate = self;
-    // optional
-    self.rewardedAd.rewardPlayAgainInteractionDelegate = self.expressRewardedVideoAgainDelegateObj;
     [self.rewardedAd loadAdData];
 }
 
@@ -273,6 +266,7 @@ RCT_EXPORT_METHOD(init:(NSString*)type
                   appKey:(NSString*)appKey)
 {
     NSLog(@"init type: %@, appKey: %@", type, appKey);
+    RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
         [manager setupGDTAdSDK:appKey];
@@ -316,10 +310,10 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [manager showBuSplash:placementId];
                     });
-                }]
+                }];
                 
             }
-        }
+        }];
     });
 }
 
@@ -328,6 +322,7 @@ RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
                   placementId:(NSString*)placementId)
 {
     NSLog(@"loadFullScreenVideo type: %@, placementId: %@", type, placementId);
+    RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
         // [manager setupGDTAdSDK:appKey];
@@ -341,6 +336,7 @@ RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
 RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type)
 {
     NSLog(@"showFullScreenVideo type: %@", type);
+    RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
         // [manager setupGDTAdSDK:appKey];
@@ -358,6 +354,7 @@ RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
                rewardAmount:(NSInteger)rewardAmount)
 {
     NSLog(@"loadRewardVideo type: %@, placementId: %@", type, placementId);
+    RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
         // [manager setupGDTAdSDK:appKey];
@@ -373,6 +370,7 @@ RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
 RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
 {
     NSLog(@"showRewardVideo type: %@", type);
+    RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
         // [manager setupGDTAdSDK:appKey];
@@ -496,7 +494,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
 
 #pragma mark - Log
 - (void)pbud_logWithSEL:(SEL)sel msg:(NSString *)msg {
-    BUD_Log(@"SDKDemoDelegate BUNativeExpressFullscreenVideoAd In VC (%@) extraMsg:%@", NSStringFromSelector(sel), msg);
+    NSLog(@"SDKDemoDelegate BUNativeExpressFullscreenVideoAd In VC (%@) extraMsg:%@", NSStringFromSelector(sel), msg);
 }
 
 #pragma mark - BUNativeExpressRewardedVideoAdDelegate
@@ -573,13 +571,6 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
     [self pbud_logWithSEL:_cmd msg:str];
 }
 
-- (BUDExpressRewardedVideoAgainDelegateObj *)expressRewardedVideoAgainDelegateObj {
-    if (!_expressRewardedVideoAgainDelegateObj) {
-        _expressRewardedVideoAgainDelegateObj = [[BUDExpressRewardedVideoAgainDelegateObj alloc] init];
-    }
-    return _expressRewardedVideoAgainDelegateObj;
-}
-
 #pragma mark delegate
 
 - (void)splashAdDidLoad:(BUSplashAdView *)splashAd {
@@ -594,9 +585,9 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
 
 - (void)splashAdDidClose:(BUSplashAdView *)splashAd {
     if (splashAd.zoomOutView) {
-        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
-            [splashAd removeFromSuperview];
-        }];
+//        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
+//            [splashAd removeFromSuperview];
+//        }];
     } else{
         // Be careful not to say 'self.splashadview = nil' here.
         // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
@@ -615,9 +606,9 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
 
 - (void)splashAdDidClickSkip:(BUSplashAdView *)splashAd {
     if (splashAd.zoomOutView) {
-        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
-            [self removeSplashAdView];
-        }];
+//        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
+//            [self removeSplashAdView];
+//        }];
     } else{
         // Click Skip, there is no subsequent operation, completely remove 'splashAdView', avoid memory leak
         [self removeSplashAdView];
