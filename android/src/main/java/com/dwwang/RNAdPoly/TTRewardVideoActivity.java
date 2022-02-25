@@ -36,7 +36,7 @@ public class TTRewardVideoActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_reward_video);
+        // setContentView(R.layout.activity_reward_video);
 
         //step1:初始化sdk
         TTAdManager ttAdManager = TTAdManagerHolder.get();
@@ -56,7 +56,7 @@ public class TTRewardVideoActivity extends Activity {
         }
         mCodeId = intent.getStringExtra("placementId");
         mRewardName = intent.getStringExtra("rewardName");
-        mRewardAmount = intent.getIntExtra("rewardAmount");
+        mRewardAmount = intent.getIntExtra("rewardAmount", 0);
         mIsExpress = intent.getBooleanExtra("is_express", false);
     }
 
@@ -74,8 +74,8 @@ public class TTRewardVideoActivity extends Activity {
                     .setAdLoadType(TTAdLoadType.LOAD)
                     //模板广告需要设置期望个性化模板广告的大小,单位dp,激励视频场景，只要设置的值大于0即可
                     .setExpressViewAcceptedSize(500,500)
-                    .setRewardName(mRewardName)
-                    .setRewardAmount(mRewardAmount)
+                    // .setRewardName(mRewardName)
+                    // .setRewardAmount(mRewardAmount)
                     .setOrientation(orientation)
                     .build();
         } else {
@@ -84,8 +84,8 @@ public class TTRewardVideoActivity extends Activity {
                     //此次加载广告的用途是实时加载，当用来作为缓存时，请使用：TTAdLoadType.LOAD
                     .setAdLoadType(TTAdLoadType.LOAD)
                     .setCodeId(codeId)
-                    .setRewardName(mRewardName)
-                    .setRewardAmount(mRewardAmount)
+                    // .setRewardName(mRewardName)
+                    // .setRewardAmount(mRewardAmount)
                     .setOrientation(orientation)
                     .build();
         }

@@ -154,7 +154,7 @@ public class SplashActivity extends Activity implements SplashADListener {
   private void fetchSplashAD(Activity activity, ViewGroup adContainer, View skipContainer,
       String posId, SplashADListener adListener, int fetchDelay) {
     fetchSplashADTime = System.currentTimeMillis();
-    splashAD = new SplashAD(activity, skipContainer, posId, adListener, fetchDelay);
+    splashAD = new SplashAD(activity, posId, adListener, fetchDelay);
     splashAD.fetchAndShowIn(adContainer);
   }
 

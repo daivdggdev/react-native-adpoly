@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.bytedance.sdk.openadsdk.AdSlot;
 import com.bytedance.sdk.openadsdk.TTAdConstant;
+import com.bytedance.sdk.openadsdk.TTAdLoadType;
 import com.bytedance.sdk.openadsdk.TTAdManager;
 import com.bytedance.sdk.openadsdk.TTAdNative;
 import com.bytedance.sdk.openadsdk.TTAppDownloadListener;
@@ -22,7 +23,7 @@ import com.bytedance.sdk.openadsdk.TTFullScreenVideoAd;
  */
 
 public class TTFullScreenVideoActivity extends Activity {
-    private static final String TAG = "TTFullScreenVideoActivity";
+    private static final String TAG = "TTFullScreen";
     private TTAdNative mTTAdNative;
     private TTFullScreenVideoAd mttFullVideoAd;
     private String mCodeId = "";
