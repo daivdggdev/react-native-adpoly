@@ -87,7 +87,7 @@ RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"ShowSplashFailed"];
+    return @[@"ShowSplashFailed", @"RewardDidSucceed", @"RewardDidClose", @"FullVideoAdDidClose"];
 }
 
 - (void)drawBottomView
@@ -144,7 +144,7 @@ RCT_EXPORT_MODULE();
 
 - (void)setupGDTAdSDK:(NSString*)appKey
 {
-    NSLog(@"setupGDTAdSDK sInitGDT: %@", self.sInitGDT);
+//    NSLog(@"setupGDTAdSDK sInitGDT: %@", self.sInitGDT);
     if (self.sInitGDT) {
         return;
     }
@@ -155,8 +155,8 @@ RCT_EXPORT_MODULE();
 
 - (void)setupBUAdSDK:(NSString*)appKey handler:(BUCompletionHandler)completionHandler
 {
-    NSLog(@"setupBUAdSDK sInitBU: %@", self.sInitBU);
-    if (self.sInitBU) {
+//    NSLog(@"setupBUAdSDK sInitBU: %@", self.sInitBU);
+    if (self.sInitBU && completionHandler != nil) {
         completionHandler(YES, nil);
         return;
     }
@@ -277,6 +277,33 @@ RCT_EXPORT_METHOD(init:(NSString*)type
     }
 }
 
+
+- (void)showSplashImpl:(NSString*)type
+                appKey:(NSString*)appKey
+           placementId:(NSString*)placementId
+{
+    RNAdPoly *manager = [RNAdPoly sharedInstance];
+    if ([type isEqual:@"gdt"])
+    {
+        [manager setupGDTAdSDK:appKey];
+        [manager showGdtSplash:placementId];
+    }
+    else if ([type isEqual:@"tt"])
+    {
+        [manager setupBUAdSDK:appKey handler:^(BOOL success, NSError *error) {
+            if (!success) {
+                NSLog(@"setupBUAdSDK error: %@", error);
+                return;
+            }
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [manager showBuSplash:placementId];
+            });
+        }];
+        
+    }
+}
+
 RCT_EXPORT_METHOD(showSplash:(NSString*)type
                   appKey:(NSString*)appKey
                   placementId:(NSString*)placementId)
@@ -290,30 +317,13 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
             [manager drawBottomView];
         }
         
-        [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
-            // Tracking authorization completed. Start loading ads here.
-            // [self loadAd];
-
-            if ([type isEqual:@"gdt"])
-            {
-                [manager setupGDTAdSDK:appKey];
-                [manager showGdtSplash:placementId];
-            }
-            else if ([type isEqual:@"tt"])
-            {
-                [manager setupBUAdSDK:appKey handler:^(BOOL success, NSError *error) {
-                    if (!success) {
-                        NSLog(@"setupBUAdSDK error: %@", error);
-                        return;
-                    }
-
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [manager showBuSplash:placementId];
-                    });
-                }];
-                
-            }
-        }];
+        if (@available(iOS 14, *)) {
+          [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+              [self showSplashImpl:type appKey:appKey placementId:placementId];
+          }];
+        } else {
+            [self showSplashImpl:type appKey:appKey placementId:placementId];
+        }
     });
 }
 
@@ -333,7 +343,9 @@ RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
     }
 }
 
-RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type)
+RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type
+                  appKey:(NSString*)appKey
+                  placementId:(NSString*)placementId)
 {
     NSLog(@"showFullScreenVideo type: %@", type);
     RNAdPoly *manager = [RNAdPoly sharedInstance];
@@ -343,7 +355,9 @@ RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type)
     }
     else if ([type isEqual:@"tt"])
     {
-        [manager showBUFullscreenVideoAd];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [manager showBUFullscreenVideoAd];
+        });
     }
 }
 
@@ -367,7 +381,11 @@ RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
     }
 }
 
-RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
+RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
+                  appKey:(NSString*)appKey
+                  placementId:(NSString*)placementId
+                  rewardName:(NSString*)rewardName
+               rewardAmount:(NSInteger)rewardAmount)
 {
     NSLog(@"showRewardVideo type: %@", type);
     RNAdPoly *manager = [RNAdPoly sharedInstance];
@@ -377,7 +395,9 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
     }
     else if ([type isEqual:@"tt"])
     {
-        [manager showBURewardVideoAd];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [manager showBURewardVideoAd];
+        });
     }
 }
 
@@ -470,6 +490,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
 
 - (void)nativeExpressFullscreenVideoAdDidClose:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
     [self pbud_logWithSEL:_cmd msg:@""];
+    [self sendEventWithName:@"FullVideoAdDidClose" body:nil];
 }
 
 - (void)nativeExpressFullscreenVideoAdDidPlayFinish:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd didFailWithError:(NSError *_Nullable)error {
@@ -537,6 +558,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
 - (void)nativeExpressRewardedVideoAdDidClose:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
     [self pbud_logWithSEL:_cmd msg:@""];
     self.rewardedAd = nil;
+    [self sendEventWithName:@"RewardDidClose" body:nil];
 }
 
 - (void)nativeExpressRewardedVideoAdDidClick:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
@@ -553,6 +575,8 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type)
 
 - (void)nativeExpressRewardedVideoAdServerRewardDidSucceed:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd verify:(BOOL)verify {
     [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"verify:%@ rewardName:%@ rewardMount:%ld",verify?@"true":@"false",rewardedVideoAd.rewardedVideoModel.rewardName,(long)rewardedVideoAd.rewardedVideoModel.rewardAmount]];
+    
+    [self sendEventWithName:@"RewardDidSucceed" body:nil];
 }
 
 - (void)nativeExpressRewardedVideoAdServerRewardDidFail:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd error:(NSError * _Nullable)error {
