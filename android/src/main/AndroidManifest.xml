@@ -21,10 +21,6 @@
     <!-- 如果有视频相关的广告且使用textureView播放，请务必添加，否则黑屏 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <uses-sdk
-        android:minSdkVersion="16"
-        android:targetSdkVersion="22" />
-
     <application>
 
       <!-- targetSDKVersion >= 24时才需要添加这个 provider。provider 的 authorities 属性的值为 ${applicationId}.fileprovider，请开发者根据自己的 ${applicationId} 来设置这个值 -->
@@ -66,6 +62,10 @@
 
         <activity
             android:name=".TTFullScreenVideoActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".TTRewardVideoActivity"
             android:screenOrientation="portrait" />
 
     </application>
