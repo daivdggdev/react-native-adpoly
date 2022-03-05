@@ -30,6 +30,7 @@ android {
 }
 
 dependencies {
-  compile fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+  compile 'com.qq.e.union:union:+'
+  compile 'com.pangle.cn:ads-sdk-pro:4.3.0.1'
   compile 'com.facebook.react:react-native:+'
 }
