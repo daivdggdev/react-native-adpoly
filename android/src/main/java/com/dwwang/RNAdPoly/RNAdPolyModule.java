@@ -38,15 +38,9 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         if (type.equals("gdt")) {
             GDTAdManagerHolder.init(context, appId);
         } else if (type.equals("tt")) {
-            Handler mainHandler = new Handler(this.context.getMainLooper());
-            Runnable myRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    TTAdManagerHolder.init(context, appId);
-                }
-            };
-
-            mainHandler.post(myRunnable);
+            runOnUiThread(() -> {
+                TTAdManagerHolder.init(context, appId);
+            });
         }
     }
 
@@ -71,15 +65,9 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             if (TTAdManagerHolder.isInitSuccess()) {
                 showTTSplash(placementId);
             } else {
-                Handler mainHandler = new Handler(this.context.getMainLooper());
-                Runnable myRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        TTAdManagerHolder.init(context, appKey);
-                        showTTSplash(placementId);
-                    }
-                };
-                mainHandler.post(myRunnable);
+                runOnUiThread(() -> {
+                    TTAdManagerHolder.init(context, appKey);
+                });
             }
         }
     }
