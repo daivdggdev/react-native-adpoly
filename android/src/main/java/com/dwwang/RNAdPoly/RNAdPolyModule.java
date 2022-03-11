@@ -1,5 +1,7 @@
 package com.dwwang.RNAdPoly;
 
+import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
+
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
