@@ -28,7 +28,7 @@ public class TTRewardVideoActivity extends Activity {
     private String mCodeId;
     private String mRewardName;
     private int mRewardAmount;
-    private boolean mIsExpress = false; // 是否请求模板广告
+    private boolean mIsExpress = true; // 是否请求模板广告
     private boolean mIsLoaded = false; // 视频是否加载完成
 
     @SuppressWarnings("RedundantCast")
@@ -57,7 +57,7 @@ public class TTRewardVideoActivity extends Activity {
         mCodeId = intent.getStringExtra("placementId");
         mRewardName = intent.getStringExtra("rewardName");
         mRewardAmount = intent.getIntExtra("rewardAmount", 0);
-        mIsExpress = intent.getBooleanExtra("is_express", false);
+        mIsExpress = intent.getBooleanExtra("is_express", true);
     }
 
     private boolean mHasShowDownloadActive = false;
@@ -96,7 +96,7 @@ public class TTRewardVideoActivity extends Activity {
             @Override
             public void onError(int code, String message) {
                 Log.e(TAG, "Callback --> onError: " + code + ", " + String.valueOf(message));
-                // TToast.show(RewardVideoActivity.this, message);
+                goToMainActivity();
             }
 
             // 视频广告加载后，视频资源缓存到本地的回调，在此回调后，播放本地视频，流畅不阻塞。
@@ -161,6 +161,7 @@ public class TTRewardVideoActivity extends Activity {
                     public void onVideoError() {
                         Log.e(TAG, "Callback --> rewardVideoAd error");
                         // TToast.show(RewardVideoActivity.this, "rewardVideoAd error");
+                        goToMainActivity();
                     }
 
                     // 视频播放完成后，奖励验证回调，rewardVerify：是否有效，rewardAmount：奖励梳理，rewardName：奖励名称
@@ -181,101 +182,115 @@ public class TTRewardVideoActivity extends Activity {
                     }
                 });
 
-                mttRewardVideoAd
-                        .setRewardPlayAgainInteractionListener(new TTRewardVideoAd.RewardAdInteractionListener() {
-                            @Override
-                            public void onAdShow() {
-                                Log.d(TAG, "Callback --> rewardPlayAgain show");
-                                // TToast.show(RewardVideoActivity.this, "rewardVideoAd show");
-                            }
+                // mttRewardVideoAd
+                // .setRewardPlayAgainInteractionListener(new
+                // TTRewardVideoAd.RewardAdInteractionListener() {
+                // @Override
+                // public void onAdShow() {
+                // Log.d(TAG, "Callback --> rewardPlayAgain show");
+                // // TToast.show(RewardVideoActivity.this, "rewardVideoAd show");
+                // }
 
-                            @Override
-                            public void onAdVideoBarClick() {
-                                Log.d(TAG, "Callback --> rewardPlayAgain bar click");
-                                // TToast.show(RewardVideoActivity.this, "rewardVideoAd bar click");
-                            }
+                // @Override
+                // public void onAdVideoBarClick() {
+                // Log.d(TAG, "Callback --> rewardPlayAgain bar click");
+                // // TToast.show(RewardVideoActivity.this, "rewardVideoAd bar click");
+                // }
 
-                            @Override
-                            public void onAdClose() {
-                                Log.d(TAG, "Callback --> rewardPlayAgain close");
-                                // TToast.show(RewardVideoActivity.this, "rewardVideoAd close");
-                                goToMainActivity();
-                            }
+                // @Override
+                // public void onAdClose() {
+                // Log.d(TAG, "Callback --> rewardPlayAgain close");
+                // // TToast.show(RewardVideoActivity.this, "rewardVideoAd close");
+                // goToMainActivity();
+                // }
 
-                            // 视频播放完成回调
-                            @Override
-                            public void onVideoComplete() {
-                                Log.d(TAG, "Callback --> rewardPlayAgain complete");
-                                // TToast.show(RewardVideoActivity.this, "rewardVideoAd complete");
-                            }
+                // // 视频播放完成回调
+                // @Override
+                // public void onVideoComplete() {
+                // Log.d(TAG, "Callback --> rewardPlayAgain complete");
+                // // TToast.show(RewardVideoActivity.this, "rewardVideoAd complete");
+                // }
 
-                            @Override
-                            public void onVideoError() {
-                                Log.e(TAG, "Callback --> rewardPlayAgain error");
-                                // TToast.show(RewardVideoActivity.this, "rewardVideoAd error");
-                            }
+                // @Override
+                // public void onVideoError() {
+                // Log.e(TAG, "Callback --> rewardPlayAgain error");
+                // // TToast.show(RewardVideoActivity.this, "rewardVideoAd error");
+                // }
 
-                            // 视频播放完成后，奖励验证回调，rewardVerify：是否有效，rewardAmount：奖励梳理，rewardName：奖励名称
-                            @Override
-                            public void onRewardVerify(boolean rewardVerify, int rewardAmount, String rewardName,
-                                    int errorCode, String errorMsg) {
-                                String logString = "rewardPlayAgain verify:" + rewardVerify + " amount:" + rewardAmount
-                                        +
-                                        " name:" + rewardName + " errorCode:" + errorCode + " errorMsg:" + errorMsg;
-                                Log.e(TAG, "Callback --> " + logString);
-                                // TToast.show(RewardVideoActivity.this, logString);
-                            }
+                // // 视频播放完成后，奖励验证回调，rewardVerify：是否有效，rewardAmount：奖励梳理，rewardName：奖励名称
+                // @Override
+                // public void onRewardVerify(boolean rewardVerify, int rewardAmount, String
+                // rewardName,
+                // int errorCode, String errorMsg) {
+                // String logString = "rewardPlayAgain verify:" + rewardVerify + " amount:" +
+                // rewardAmount
+                // +
+                // " name:" + rewardName + " errorCode:" + errorCode + " errorMsg:" + errorMsg;
+                // Log.e(TAG, "Callback --> " + logString);
+                // // TToast.show(RewardVideoActivity.this, logString);
+                // }
 
-                            @Override
-                            public void onSkippedVideo() {
-                                Log.e(TAG, "Callback --> rewardPlayAgain has onSkippedVideo");
-                                // TToast.show(RewardVideoActivity.this, "rewardVideoAd has onSkippedVideo");
-                            }
-                        });
-                mttRewardVideoAd.setDownloadListener(new TTAppDownloadListener() {
-                    @Override
-                    public void onIdle() {
-                        mHasShowDownloadActive = false;
-                    }
+                // @Override
+                // public void onSkippedVideo() {
+                // Log.e(TAG, "Callback --> rewardPlayAgain has onSkippedVideo");
+                // // TToast.show(RewardVideoActivity.this, "rewardVideoAd has onSkippedVideo");
+                // }
+                // });
+                // mttRewardVideoAd.setDownloadListener(new TTAppDownloadListener() {
+                // @Override
+                // public void onIdle() {
+                // mHasShowDownloadActive = false;
+                // }
 
-                    @Override
-                    public void onDownloadActive(long totalBytes, long currBytes, String fileName, String appName) {
-                        Log.d("DML", "onDownloadActive==totalBytes=" + totalBytes + ",currBytes=" + currBytes
-                                + ",fileName=" + fileName + ",appName=" + appName);
+                // @Override
+                // public void onDownloadActive(long totalBytes, long currBytes, String
+                // fileName, String appName) {
+                // Log.d("DML", "onDownloadActive==totalBytes=" + totalBytes + ",currBytes=" +
+                // currBytes
+                // + ",fileName=" + fileName + ",appName=" + appName);
 
-                        if (!mHasShowDownloadActive) {
-                            mHasShowDownloadActive = true;
-                            // TToast.show(RewardVideoActivity.this, "下载中，点击下载区域暂停", Toast.LENGTH_LONG);
-                        }
-                    }
+                // if (!mHasShowDownloadActive) {
+                // mHasShowDownloadActive = true;
+                // // TToast.show(RewardVideoActivity.this, "下载中，点击下载区域暂停", Toast.LENGTH_LONG);
+                // }
+                // }
 
-                    @Override
-                    public void onDownloadPaused(long totalBytes, long currBytes, String fileName, String appName) {
-                        Log.d("DML", "onDownloadPaused===totalBytes=" + totalBytes + ",currBytes=" + currBytes
-                                + ",fileName=" + fileName + ",appName=" + appName);
-                        // TToast.show(RewardVideoActivity.this, "下载暂停，点击下载区域继续", Toast.LENGTH_LONG);
-                    }
+                // @Override
+                // public void onDownloadPaused(long totalBytes, long currBytes, String
+                // fileName, String appName) {
+                // Log.d("DML", "onDownloadPaused===totalBytes=" + totalBytes + ",currBytes=" +
+                // currBytes
+                // + ",fileName=" + fileName + ",appName=" + appName);
+                // // TToast.show(RewardVideoActivity.this, "下载暂停，点击下载区域继续", Toast.LENGTH_LONG);
+                // }
 
-                    @Override
-                    public void onDownloadFailed(long totalBytes, long currBytes, String fileName, String appName) {
-                        Log.d("DML", "onDownloadFailed==totalBytes=" + totalBytes + ",currBytes=" + currBytes
-                                + ",fileName=" + fileName + ",appName=" + appName);
-                        // TToast.show(RewardVideoActivity.this, "下载失败，点击下载区域重新下载", Toast.LENGTH_LONG);
-                    }
+                // @Override
+                // public void onDownloadFailed(long totalBytes, long currBytes, String
+                // fileName, String appName) {
+                // Log.d("DML", "onDownloadFailed==totalBytes=" + totalBytes + ",currBytes=" +
+                // currBytes
+                // + ",fileName=" + fileName + ",appName=" + appName);
+                // // TToast.show(RewardVideoActivity.this, "下载失败，点击下载区域重新下载",
+                // Toast.LENGTH_LONG);
+                // }
 
-                    @Override
-                    public void onDownloadFinished(long totalBytes, String fileName, String appName) {
-                        Log.d("DML", "onDownloadFinished==totalBytes=" + totalBytes + ",fileName=" + fileName
-                                + ",appName=" + appName);
-                        // TToast.show(RewardVideoActivity.this, "下载完成，点击下载区域重新下载", Toast.LENGTH_LONG);
-                    }
+                // @Override
+                // public void onDownloadFinished(long totalBytes, String fileName, String
+                // appName) {
+                // Log.d("DML", "onDownloadFinished==totalBytes=" + totalBytes + ",fileName=" +
+                // fileName
+                // + ",appName=" + appName);
+                // // TToast.show(RewardVideoActivity.this, "下载完成，点击下载区域重新下载",
+                // Toast.LENGTH_LONG);
+                // }
 
-                    @Override
-                    public void onInstalled(String fileName, String appName) {
-                        Log.d("DML", "onInstalled==" + ",fileName=" + fileName + ",appName=" + appName);
-                        // TToast.show(RewardVideoActivity.this, "安装完成，点击下载区域打开", Toast.LENGTH_LONG);
-                    }
-                });
+                // @Override
+                // public void onInstalled(String fileName, String appName) {
+                // Log.d("DML", "onInstalled==" + ",fileName=" + fileName + ",appName=" +
+                // appName);
+                // // TToast.show(RewardVideoActivity.this, "安装完成，点击下载区域打开", Toast.LENGTH_LONG);
+                // }
+                // });
             }
         });
     }

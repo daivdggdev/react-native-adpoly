@@ -28,7 +28,7 @@ public class TTFullScreenVideoActivity extends Activity {
     private TTAdNative mTTAdNative;
     private TTFullScreenVideoAd mttFullVideoAd;
     private String mCodeId = "";
-    private boolean mIsExpress = false; // 是否请求模板广告
+    private boolean mIsExpress = true; // 是否请求模板广告
     private boolean mIsLoaded = false; // 视频是否加载完成
 
     @SuppressWarnings("RedundantCast")
@@ -56,7 +56,7 @@ public class TTFullScreenVideoActivity extends Activity {
             return;
         }
         String codeId = intent.getStringExtra("placementId");
-        mIsExpress = intent.getBooleanExtra("is_express", false);
+        mIsExpress = intent.getBooleanExtra("is_express", true);
         if (!TextUtils.isEmpty(codeId)) {
             mCodeId = codeId;
         }
@@ -88,6 +88,7 @@ public class TTFullScreenVideoActivity extends Activity {
             @Override
             public void onError(int code, String message) {
                 Log.i(TAG, "Callback --> onError: " + code + ", " + String.valueOf(message));
+                goToMainActivity();
             }
 
             @Override
@@ -127,60 +128,6 @@ public class TTFullScreenVideoActivity extends Activity {
                             }
 
                         });
-
-                // ad.setDownloadListener(new TTAppDownloadListener() {
-                // @Override
-                // public void onIdle() {
-                // mHasShowDownloadActive = false;
-                // }
-
-                // @Override
-                // public void onDownloadActive(long totalBytes, long currBytes, String
-                // fileName, String appName) {
-                // Log.d("DML", "onDownloadActive==totalBytes=" + totalBytes + ",currBytes=" +
-                // currBytes + ",fileName=" + fileName + ",appName=" + appName);
-
-                // if (!mHasShowDownloadActive) {
-                // mHasShowDownloadActive = true;
-                // TToast.show(FullScreenVideoActivity.this, "下载中，点击下载区域暂停", Toast.LENGTH_LONG);
-                // }
-                // }
-
-                // @Override
-                // public void onDownloadPaused(long totalBytes, long currBytes, String
-                // fileName, String appName) {
-                // Log.d("DML", "onDownloadPaused===totalBytes=" + totalBytes + ",currBytes=" +
-                // currBytes + ",fileName=" + fileName + ",appName=" + appName);
-                // TToast.show(FullScreenVideoActivity.this, "下载暂停，点击下载区域继续",
-                // Toast.LENGTH_LONG);
-                // }
-
-                // @Override
-                // public void onDownloadFailed(long totalBytes, long currBytes, String
-                // fileName, String appName) {
-                // Log.d("DML", "onDownloadFailed==totalBytes=" + totalBytes + ",currBytes=" +
-                // currBytes + ",fileName=" + fileName + ",appName=" + appName);
-                // TToast.show(FullScreenVideoActivity.this, "下载失败，点击下载区域重新下载",
-                // Toast.LENGTH_LONG);
-                // }
-
-                // @Override
-                // public void onDownloadFinished(long totalBytes, String fileName, String
-                // appName) {
-                // Log.d("DML", "onDownloadFinished==totalBytes=" + totalBytes + ",fileName=" +
-                // fileName + ",appName=" + appName);
-                // TToast.show(FullScreenVideoActivity.this, "下载完成，点击下载区域重新下载",
-                // Toast.LENGTH_LONG);
-                // }
-
-                // @Override
-                // public void onInstalled(String fileName, String appName) {
-                // Log.d("DML", "onInstalled==" + ",fileName=" + fileName + ",appName=" +
-                // appName);
-                // TToast.show(FullScreenVideoActivity.this, "安装完成，点击下载区域打开",
-                // Toast.LENGTH_LONG);
-                // }
-                // });
             }
 
             @Override
