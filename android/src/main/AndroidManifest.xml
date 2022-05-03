@@ -21,7 +21,7 @@
     <!-- 如果有视频相关的广告且使用textureView播放，请务必添加，否则黑屏 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <application>
+    <application android:usesCleartextTraffic="true">
 
       <!-- targetSDKVersion >= 24时才需要添加这个 provider。provider 的 authorities 属性的值为 ${applicationId}.fileprovider，请开发者根据自己的 ${applicationId} 来设置这个值 -->
       <!--<provider-->
@@ -33,6 +33,9 @@
           <!--android:name="android.support.FILE_PROVIDER_PATHS"-->
           <!--android:resource="@xml/gdt_file_path" />-->
       <!--</provider>-->
+       <uses-library
+          android:name="org.apache.http.legacy"
+          android:required="false" />
 
         <service
           android:name="com.qq.e.comm.DownloadService"

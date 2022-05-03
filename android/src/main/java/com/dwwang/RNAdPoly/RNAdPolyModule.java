@@ -87,6 +87,8 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         Log.i("AD_DEMO", "showFullScreenVideo type = " + type);
         if (type.equals("tt")) {
             showTTFullScreenVideo(placementId);
+        } else if (type.equals("gdt")) {
+            showGdtFullScreenVideo(placementId);
         }
     }
 
@@ -103,6 +105,8 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         Log.i("AD_DEMO", "showFullScreenVideo type = " + type);
         if (type.equals("tt")) {
             showTTRewardVideo(placementId, rewardName, rewardAmount);
+        } else if (type.equals("gdt")) {
+            showGdtRewardVideo(placementId, rewardName, rewardAmount);
         }
     }
 
@@ -129,7 +133,6 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         }
 
         ReactApplicationContext context = getReactApplicationContext();
-
         Intent intent = new Intent(context, TTSplashActivity.class);
         intent.putExtra("placementId", placementId);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -139,8 +142,16 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     private void showTTFullScreenVideo(String placementId) {
         Log.i("AD_DEMO", "showTTFullScreenVideo placementId = " + placementId);
         ReactApplicationContext context = getReactApplicationContext();
-
         Intent intent = new Intent(context, TTFullScreenVideoActivity.class);
+        intent.putExtra("placementId", placementId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+    private void showGdtFullScreenVideo(String placementId) {
+        Log.i("AD_DEMO", "showGdtFullScreenVideo placementId = " + placementId);
+        ReactApplicationContext context = getReactApplicationContext();
+        Intent intent = new Intent(context, GDTInterstitialADActivity.class);
         intent.putExtra("placementId", placementId);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
@@ -149,8 +160,18 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     private void showTTRewardVideo(String placementId, String rewardName, int rewardAmount) {
         Log.i("AD_DEMO", "showTTRewardVideo placementId = " + placementId);
         ReactApplicationContext context = getReactApplicationContext();
-
         Intent intent = new Intent(context, TTRewardVideoActivity.class);
+        intent.putExtra("placementId", placementId);
+        intent.putExtra("rewardName", rewardName);
+        intent.putExtra("rewardAmount", rewardAmount);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+    private void showGdtRewardVideo(String placementId, String rewardName, int rewardAmount) {
+        Log.i("AD_DEMO", "showGdtRewardVideo placementId = " + placementId);
+        ReactApplicationContext context = getReactApplicationContext();
+        Intent intent = new Intent(context, GDTRewardVideoActivity.class);
         intent.putExtra("placementId", placementId);
         intent.putExtra("rewardName", rewardName);
         intent.putExtra("rewardAmount", rewardAmount);
