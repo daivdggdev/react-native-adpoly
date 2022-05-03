@@ -1,15 +1,12 @@
 package com.dwwang.RNAdPoly;
 
-import android.content.pm.ActivityInfo;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.Spinner;
 
 import com.qq.e.ads.rewardvideo.RewardVideoAD;
 import com.qq.e.ads.rewardvideo.RewardVideoADListener;
@@ -29,13 +26,14 @@ import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
  * Created by chaotao on 2018/10/8.
  */
 
-public class GDTRewardVideoActivity implements RewardVideoADListener {
+public class GDTRewardVideoActivity extends Activity implements RewardVideoADListener {
 
   private static final String TAG = GDTRewardVideoActivity.class.getSimpleName();
   private RewardVideoAD mRewardVideoAD;
   private String mCodeId;
   private String mRewardName;
   private int mRewardAmount;
+  private boolean mIsLoadSuccess;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +88,7 @@ public class GDTRewardVideoActivity implements RewardVideoADListener {
     // reportBiddingResult(mRewardVideoAD);
 
     mIsLoadSuccess = true;
-    if (!rewardVideoAD.hasShown() && rewardVideoAD.isValid()) {
+    if (!mRewardVideoAD.hasShown() && mRewardVideoAD.isValid()) {
       //广告展示检查2：当前广告数据还没有展示过
       //广告展示检查3：展示广告前判断广告数据未过期
       mRewardVideoAD.showAD();
@@ -144,6 +142,7 @@ public class GDTRewardVideoActivity implements RewardVideoADListener {
   public void onReward(Map<String, Object> map) {
     // Log.i(TAG, "onReward " + map.get(ServerSideVerificationOptions.TRANS_ID));  // 获取服务端验证的唯一 ID
     Log.i(TAG, "onReward ");  // 获取服务端验证的唯一 ID
+    AdHelper.sendEvent("RewardDidSucceed", null);
   }
 
   /**
@@ -168,6 +167,8 @@ public class GDTRewardVideoActivity implements RewardVideoADListener {
   @Override
   public void onADClose() {
     Log.i(TAG, "onADClose");
+    AdHelper.sendEvent("RewardDidClose", null);
+    goToMainActivity();
   }
 
   /**
@@ -178,5 +179,15 @@ public class GDTRewardVideoActivity implements RewardVideoADListener {
     String msg = String.format(Locale.getDefault(), "onError, error code: %d, error msg: %s",
         adError.getErrorCode(), adError.getErrorMsg());
     Log.i(TAG, "onError, adError=" + msg);
+    goToMainActivity();
+  }
+
+  /**
+     * 跳转到主页面
+     */
+  private void goToMainActivity() {
+    // Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+    // startActivity(intent);
+    this.finish();
   }
 }

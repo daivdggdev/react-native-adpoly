@@ -1,16 +1,12 @@
 package com.dwwang.RNAdPoly;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.Spinner;
 
 import com.qq.e.ads.cfg.VideoOption;
 import com.qq.e.ads.interstitial2.UnifiedInterstitialAD;
@@ -21,7 +17,7 @@ import com.qq.e.comm.util.AdError;
 
 import java.util.Locale;
 
-public class GDTInterstitialADActivity implements UnifiedInterstitialADListener, UnifiedInterstitialMediaListener {
+public class GDTInterstitialADActivity extends Activity implements UnifiedInterstitialADListener, UnifiedInterstitialMediaListener {
 
   private static final String TAG = GDTInterstitialADActivity.class.getSimpleName();
   private UnifiedInterstitialAD iad;
@@ -49,7 +45,7 @@ public class GDTInterstitialADActivity implements UnifiedInterstitialADListener,
   private void loadAd() {
     mLoadSuccess = false;
     iad = getIAD();
-    iad.loadAD();
+    iad.loadFullScreenAD();
   }
 
   @Override
@@ -118,6 +114,7 @@ public class GDTInterstitialADActivity implements UnifiedInterstitialADListener,
     String msg = String.format(Locale.getDefault(), "onNoAD, error code: %d, error msg: %s",
         error.getErrorCode(), error.getErrorMsg());
     Log.i(TAG, "onNoAD: " + msg);
+    goToMainActivity();
   }
 
   @Override
@@ -143,13 +140,15 @@ public class GDTInterstitialADActivity implements UnifiedInterstitialADListener,
   @Override
   public void onADClosed() {
     Log.i(TAG, "onADClosed");
+    AdHelper.sendEvent("FullVideoAdDidClose", null);
+    goToMainActivity();
   }
 
   @Override
   public void onRenderSuccess() {
     Log.i(TAG, "onRenderSuccess，建议在此回调后再调用展示方法");
     if (iad.isValid()){
-      iad.show();
+      iad.showFullScreenAD(this);
     }
   }
 
@@ -201,5 +200,14 @@ public class GDTInterstitialADActivity implements UnifiedInterstitialADListener,
   @Override
   public void onVideoPageClose() {
     Log.i(TAG, "onVideoPageClose");
+  }
+
+  /**
+     * 跳转到主页面
+     */
+  private void goToMainActivity() {
+    // Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+    // startActivity(intent);
+    this.finish();
   }
 }

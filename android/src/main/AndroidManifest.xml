@@ -71,5 +71,13 @@
             android:name=".TTRewardVideoActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".GDTRewardVideoActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".GDTInterstitialADActivity"
+            android:screenOrientation="portrait" />
+
     </application>
 </manifest>
