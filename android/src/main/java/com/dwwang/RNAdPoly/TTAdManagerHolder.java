@@ -3,10 +3,12 @@ package com.dwwang.RNAdPoly;
 import android.content.Context;
 import android.util.Log;
 
+import com.bytedance.sdk.openadsdk.LocationProvider;
 import com.bytedance.sdk.openadsdk.TTAdConfig;
 import com.bytedance.sdk.openadsdk.TTAdConstant;
 import com.bytedance.sdk.openadsdk.TTAdManager;
 import com.bytedance.sdk.openadsdk.TTAdSdk;
+import com.bytedance.sdk.openadsdk.TTCustomController;
 
 /**
  * 可以用一个单例来保存TTAdManager实例，在需要初始化sdk的时候调用
@@ -22,7 +24,7 @@ public class TTAdManagerHolder {
         return TTAdSdk.getAdManager();
     }
 
-    public static void init(Context context, String appId) {
+    public static void init(Context context, String appId, Boolean requestPermission) {
         if (!sInit) {
             TTAdConfig config = new TTAdConfig.Builder()
                     .appId(appId)
@@ -34,6 +36,52 @@ public class TTAdManagerHolder {
                     .directDownloadNetworkType(TTAdConstant.NETWORK_STATE_WIFI, TTAdConstant.NETWORK_STATE_4G) // 允许直接下载的网络状态集合
                     .supportMultiProcess(false)// 是否支持多进程
                     .needClearTaskReset()
+                    .customController(new TTCustomController() {
+                      @Override
+                      public boolean isCanUseLocation() {
+                        return requestPermission;
+                      }
+
+                      @Override
+                      public LocationProvider getTTLocation() {
+                        return super.getTTLocation();
+                      }
+
+                      @Override
+                      public boolean alist() {
+                        return requestPermission;
+                      }
+
+                      @Override
+                      public boolean isCanUsePhoneState() {
+                        return requestPermission;
+                      }
+
+                      @Override
+                      public String getDevImei() {
+                        return super.getDevImei();
+                      }
+
+                      @Override
+                      public boolean isCanUseWifiState() {
+                        return requestPermission;
+                      }
+
+                      @Override
+                      public String getMacAddress() {
+                        return super.getMacAddress();
+                      }
+
+                      @Override
+                      public boolean isCanUseWriteExternal() {
+                        return requestPermission;
+                      }
+
+                      @Override
+                      public String getDevOaid() {
+                        return super.getDevOaid();
+                      }
+                    })
                     // .httpStack(new MyOkStack3())//自定义网络库，demo中给出了okhttp3版本的样例，其余请自行开发或者咨询工作人员。
                     .build();
 

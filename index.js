@@ -3,8 +3,8 @@
 var RNAdPoly = require('react-native').NativeModules.RNAdPoly;
 var IsAndroid = RNAdPoly.IsAndroid;
 
-function init(type, appKey) {
-  RNAdPoly.init(type, appKey);
+function init(type, appKey, requestPermission) {
+  RNAdPoly.init(type, appKey, requestPermission);
 }
 
 function requestPermissionIfNecessary() {

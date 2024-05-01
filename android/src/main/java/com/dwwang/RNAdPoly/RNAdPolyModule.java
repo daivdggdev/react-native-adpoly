@@ -35,13 +35,13 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void init(String type, final String appId) {
+    public void init(String type, final String appId, final Boolean requestPermission) {
         Log.i("AD_DEMO", "init type = " + type);
         if (type.equals("gdt")) {
             GDTAdManagerHolder.init(context, appId);
         } else if (type.equals("tt")) {
             runOnUiThread(() -> {
-                TTAdManagerHolder.init(context, appId);
+                TTAdManagerHolder.init(context, appId, requestPermission);
             });
         }
     }
@@ -68,7 +68,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                 showTTSplash(placementId);
             } else {
                 runOnUiThread(() -> {
-                    TTAdManagerHolder.init(context, appKey);
+                    TTAdManagerHolder.init(context, appKey, true);
                 });
             }
         }
