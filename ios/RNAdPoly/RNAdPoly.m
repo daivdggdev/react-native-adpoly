@@ -45,7 +45,7 @@ typedef NS_ENUM(NSInteger, AdSplashType)
 @property (nonatomic, strong) GDTUnifiedInterstitialAd *gdtInterstitial;
 @property (nonatomic, strong) GDTRewardVideoAd *gdtRewardVideoAd;
 
-@property (nonatomic, strong) KSInterstitialAd *ksInterstitialAd;
+@property (nonatomic, strong) KSInterstitialAd *ksInterstitial;
 @property (nonatomic, strong) KSRewardedVideoAd *ksRewardVideoAd;
 
 //@property (nonatomic, strong) IMNative* nativeAd;
@@ -312,7 +312,7 @@ RCT_EXPORT_MODULE();
 {
     if (self.ksRewardVideoAd.isValid) {
         UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
-        [self.rewardedVideoAd showAdFromRootViewController:rootViewController];
+        [self.ksRewardVideoAd showAdFromRootViewController:rootViewController];
     }
 }
 
@@ -349,7 +349,8 @@ RCT_EXPORT_MODULE();
 }
 
 RCT_EXPORT_METHOD(init:(NSString*)type
-                  appKey:(NSString*)appKey)
+                  appKey:(NSString*)appKey
+                  requestPermission:(BOOL)requestPermission)
 {
     NSLog(@"init type: %@, appKey: %@", type, appKey);
     RNAdPoly *manager = [RNAdPoly sharedInstance];
@@ -360,6 +361,10 @@ RCT_EXPORT_METHOD(init:(NSString*)type
     else if ([type isEqual:@"tt"])
     {
         [manager setupBUAdSDK:appKey handler:nil];
+    }
+    else if ([type isEqual:@"ks"])
+    {
+        [manager setupKSAdSDK:appKey];
     }
 }
 
@@ -427,6 +432,10 @@ RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
     {
         [manager loadBUFullscreenVideoAd:placementId];
     }
+    else if ([type isEqual:@"ks"])
+    {
+        [manager loadKSFullscreenVideoAd:placementId];
+    }
 }
 
 RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type
@@ -445,6 +454,12 @@ RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type
     {
         dispatch_async(dispatch_get_main_queue(), ^{
             [manager showBUFullscreenVideoAd];
+        });
+    }
+    else if ([type isEqual:@"ks"])
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [manager showKSFullscreenVideoAd];
         });
     }
 }
