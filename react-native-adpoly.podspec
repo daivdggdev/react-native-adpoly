@@ -17,4 +17,5 @@ Pod::Spec.new do |s|
   s.dependency 'Masonry'
   s.dependency 'GDTMobSDK'
   s.dependency 'Ads-CN'
+  s.dependency 'KSAdSDK'
 end

@@ -11,16 +11,17 @@
 #import <AdSupport/AdSupport.h>
 #import <GDTSplashAd.h>
 #import <GDTSDKConfig.h>
-#import <GDTAppDelegate.h>
 #import <GDTUnifiedInterstitialAd.h>
 #import <GDTRewardVideoAd.h>
 
 #import <Masonry/Masonry.h>
+#import <BUAdSDK/BUAdSDK.h>
 #import <BUAdSDK/BUAdSDKManager.h>
-#import <BUAdSDK/BUSplashAdView.h>
 #import <BUAdSDK/BUNativeExpressFullscreenVideoAd.h>
 #import <BUAdSDK/BUNativeExpressRewardedVideoAd.h>
 #import <BUAdSDK/BURewardedVideoModel.h>
+
+#import <KSAdSDK/KSAdSDK.h>
 
 static RNAdPoly *_instance = nil;
 
@@ -30,18 +31,22 @@ typedef NS_ENUM(NSInteger, AdSplashType)
     AdSplashType_BAIDU,
 };
 
-@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate, GDTUnifiedInterstitialAdDelegate, GDTRewardedVideoAdDelegate, BUNativeExpressFullscreenVideoAdDelegate, BUNativeExpressRewardedVideoAdDelegate>
+@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate, GDTUnifiedInterstitialAdDelegate, GDTRewardedVideoAdDelegate, BUNativeExpressFullscreenVideoAdDelegate, BUNativeExpressRewardedVideoAdDelegate, KSInterstitialAdDelegate, KSRewardedVideoAdDelegate>
 @property (nonatomic, strong) GDTSplashAd *gdtSplash;
 //@property (nonatomic, strong) UIView *customSplashView;
 @property (nonatomic, strong) UIView *bottomView;
-@property (nonatomic, strong) BUSplashAdView *buSplash;
+@property (nonatomic, strong) BUSplashAd *buSplash;
 @property (nonatomic, strong) BUNativeExpressFullscreenVideoAd *fullscreenAd;
 @property (nonatomic, strong) BUNativeExpressRewardedVideoAd *rewardedAd;
 @property (nonatomic, assign) BOOL sInitGDT;
 @property (nonatomic, assign) BOOL sInitBU;
+@property (nonatomic, assign) BOOL sInitKS;
 
 @property (nonatomic, strong) GDTUnifiedInterstitialAd *gdtInterstitial;
 @property (nonatomic, strong) GDTRewardVideoAd *gdtRewardVideoAd;
+
+@property (nonatomic, strong) KSInterstitialAd *ksInterstitialAd;
+@property (nonatomic, strong) KSRewardedVideoAd *ksRewardVideoAd;
 
 //@property (nonatomic, strong) IMNative* nativeAd;
 //@property (nonatomic, strong) NSString* nativeContent;
@@ -94,7 +99,7 @@ RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"ShowSplashFailed", @"RewardDidSucceed", @"RewardDidClose", @"FullVideoAdDidClose"];
+    return @[@"ShowSplashFailed", @"RewardDidSucceed", @"RewardDidClose", @"FullVideoAdDidSucceed", @"FullVideoAdDidFailed", @"FullVideoAdDidClose"];
 }
 
 - (void)drawBottomView
@@ -175,34 +180,27 @@ RCT_EXPORT_MODULE();
     
     BUAdSDKConfiguration *configuration = [BUAdSDKConfiguration configuration];
     configuration.appID = appKey;
-    configuration.privacyProvider = [[BUDPrivacyProvider alloc] init];
+//    configuration.privacyProvider = [[BUDPrivacyProvider alloc] init];
     configuration.appLogoImage = [UIImage imageNamed:@"AppIcon"];
     [BUAdSDKManager startWithAsyncCompletionHandler:^(BOOL success, NSError *error) {
         self.sInitBU = success;
+    }];    
+}
+
+- (void)setupKSAdSDK:(NSString*)appKey
+{
+//    NSLog(@"setupGDTAdSDK sInitGDT: %@", self.sInitGDT);
+    if (self.sInitKS) {
+        return;
+    }
+
+    KSAdSDKConfiguration *configuration = [KSAdSDKConfiguration configuration];
+    configuration.appId = appKey;
+
+    // 启动SDK：SDK启动成功后，才可以继续进行后续的广告请求操作（异步）
+    [KSAdSDKManager startWithCompletionHandler:^(BOOL success, NSError *error) {
+        self.sInitKS = success;
     }];
-    
-//    ///optional
-//    ///CN china, NO_CN is not china
-//    ///you must set Territory first,  if you need to set them
-//    [BUAdSDKManager setTerritory:isNoCN?BUAdSDKTerritory_NO_CN:BUAdSDKTerritory_CN];
-//    //optional
-//    //GDPR 0 close privacy protection, 1 open privacy protection
-//    [BUAdSDKManager setGDPR:0];
-//    //optional
-//    //Coppa 0 adult, 1 child
-//    [BUAdSDKManager setCoppa:0];
-//    // you can set idfa by yourself, it is optional and maybe will never be used.
-//    [BUAdSDKManager setCustomIDFA:@"12345678-1234-1234-1234-123456789012"];
-//#if DEBUG
-//    // Whether to open log. default is none.
-//    [BUAdSDKManager setLoglevel:BUAdSDKLogLevelDebug];
-//#endif
-//    //BUAdSDK requires iOS 9 and up
-//    [BUAdSDKManager setAppID:[BUDAdManager appKey]];
-//
-//    [BUAdSDKManager setIsPaidApp:NO];
-    
-    
 }
 
 - (void)loadGDTFullscreenVideoAd:(NSString*)placementId
@@ -210,7 +208,7 @@ RCT_EXPORT_MODULE();
     if (self.gdtInterstitial) {
         self.gdtInterstitial.delegate = nil;
     }
-    self.gdtInterstitial = [[GDTUnifiedInterstitialAd alloc] initWithPlacementId:YOUR_PLACEMENT_ID];
+    self.gdtInterstitial = [[GDTUnifiedInterstitialAd alloc] initWithPlacementId:placementId];
     self.gdtInterstitial.delegate = self;
     [self.gdtInterstitial loadAd]; // 加载插屏半屏广告
 }
@@ -235,6 +233,25 @@ RCT_EXPORT_MODULE();
     if (self.fullscreenAd) {
         UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
         [self.fullscreenAd showAdFromRootViewController:rootViewController];
+    }
+}
+
+- (void)loadKSFullscreenVideoAd:(NSString*)placementId
+{
+    if (self.ksInterstitial) {
+        self.ksInterstitial.delegate = nil;
+        self.ksInterstitial = nil;
+    }
+    self.ksInterstitial = [[KSInterstitialAd alloc] initWithPosId:placementId];
+    self.ksInterstitial.delegate = self;
+    [self.ksInterstitial loadAdData]; // 加载插屏半屏广告
+}
+
+- (void)showKSFullscreenVideoAd
+{
+    if (self.ksInterstitial) {
+        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        [self.ksInterstitial showFromViewController:rootViewController];
     }
 }
 
@@ -275,6 +292,30 @@ RCT_EXPORT_MODULE();
     }
 }
 
+- (void)loadKSRewardVideoAd:(NSString*)placementId 
+                 rewardName:(NSString*)rewardName
+               rewardAmount:(NSInteger)rewardAmount
+{
+    if (self.ksRewardVideoAd) {
+        self.ksRewardVideoAd.delegate = nil;
+        self.ksRewardVideoAd.innerDelegate = nil;
+        self.ksRewardVideoAd = nil;
+    }
+    // 激励视频广告
+    KSRewardedVideoModel *model = [KSRewardedVideoModel new];
+    self.ksRewardVideoAd = [[KSRewardedVideoAd alloc] initWithPosId:placementId rewardedVideoModel:model];
+    self.ksRewardVideoAd.delegate = self;
+    [self.ksRewardVideoAd loadAdData];
+}
+
+- (void)showKSRewardVideoAd
+{
+    if (self.ksRewardVideoAd.isValid) {
+        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        [self.rewardedVideoAd showAdFromRootViewController:rootViewController];
+    }
+}
+
 - (void)showGdtSplash:(NSString*)placementId
 {
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
@@ -299,13 +340,11 @@ RCT_EXPORT_MODULE();
 - (void)showBuSplash:(NSString*)placementId;
 {
     CGRect frame = [UIScreen mainScreen].bounds;
-    self.buSplash = [[BUSplashAdView alloc] initWithSlotID:placementId frame:frame];
+    self.buSplash = [[BUSplashAd alloc] initWithSlotID:placementId adSize:frame.size];
+    self.buSplash.supportCardView = YES;
+    self.buSplash.supportZoomOutView = YES;
     self.buSplash.tolerateTimeout = 3.5;
     self.buSplash.delegate = self;
-    
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
-    [window.rootViewController.view addSubview:self.buSplash];
-    self.buSplash.rootViewController = window.rootViewController;
     [self.buSplash loadAdData];
 }
 
@@ -511,6 +550,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     NSLog(@"%s",__FUNCTION__);
     NSLog(@"eCPM:%ld eCPMLevel:%@", [unifiedInterstitial eCPM], [unifiedInterstitial eCPMLevel]);
     NSLog(@"videoDuration:%lf isVideo: %@", unifiedInterstitial.videoDuration, @(unifiedInterstitial.isVideoAd));
+    [self sendEventWithName:@"FullVideoAdDidSucceed" body:nil];
 }
 
 /**
@@ -520,6 +560,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 - (void)unifiedInterstitialFailToLoadAd:(GDTUnifiedInterstitialAd *)unifiedInterstitial error:(NSError *)error
 {
     NSLog(@"%s ad load fail: %@",__FUNCTION__,error);
+    [self sendEventWithName:@"FullVideoAdDidFailed" body:nil];
 }
 
 - (void)unifiedInterstitialDidDownloadVideo:(GDTUnifiedInterstitialAd *)unifiedInterstitial {
@@ -630,8 +671,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
  */
 - (void)unifiedInterstitialAd:(GDTUnifiedInterstitialAd *)unifiedInterstitial playerStatusChanged:(GDTMediaPlayerStatus)status
 {
-    NSString *statusString = [DemoUtil videoPlayerStatusStringFromStatus:status];
-    NSLog(@"%s-----status:%@",__FUNCTION__,statusString);
+    NSLog(@"%s",__FUNCTION__);
 }
 
 /**
@@ -728,18 +768,15 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     // }
 }
 
-- (void)gdtAdComplainSuccess:(id)ad {
-    NSLog(@"%s",__FUNCTION__);
-    NSLog(@"广告投诉成功");
-}
-
 #pragma mark - BUNativeExpressFullscreenVideoAdDelegate
 - (void)nativeExpressFullscreenVideoAdDidLoad:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
     [self pbud_logWithSEL:_cmd msg:@""];
+    [self sendEventWithName:@"FullVideoAdDidSucceed" body:nil];
 }
 
 - (void)nativeExpressFullscreenVideoAd:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd didFailWithError:(NSError *_Nullable)error {
     [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"%@", error]];
+    [self sendEventWithName:@"FullVideoAdDidFailed" body:nil];
 }
 
 - (void)nativeExpressFullscreenVideoAdViewRenderSuccess:(BUNativeExpressFullscreenVideoAd *)rewardedVideoAd {
@@ -861,7 +898,6 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)nativeExpressRewardedVideoAdServerRewardDidSucceed:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd verify:(BOOL)verify {
     [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"verify:%@ rewardName:%@ rewardMount:%ld",verify?@"true":@"false",rewardedVideoAd.rewardedVideoModel.rewardName,(long)rewardedVideoAd.rewardedVideoModel.rewardAmount]];
-    
     [self sendEventWithName:@"RewardDidSucceed" body:nil];
 }
 
@@ -881,19 +917,139 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     [self pbud_logWithSEL:_cmd msg:str];
 }
 
+#pragma mark - KSInterstitialAdDelegate
+
+- (void)ksad_interstitialAdDidLoad:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+    [self sendEventWithName:@"FullVideoAdDidSucceed" body:nil];
+}
+
+- (void)ksad_interstitialAdDidClick:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdDidClickSkip:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdWillClose:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdDidClose:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdWillVisible:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdDidVisible:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdRenderSuccess:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdRenderFail:(KSInterstitialAd *)interstitialAd error:(NSError *)error {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialAdDidCloseOtherController:(KSInterstitialAd *)interstitialAd interactionType:(KSAdInteractionType)interactionType {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialVideoAdStartPlay:(KSInterstitialAd *)interstitialAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)ksad_interstitialVideoAdDidPlayFinish:(KSInterstitialAd *)interstitialAd didFailWithError:(NSError *_Nullable)error {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+
+#pragma mark - KSRewardedVideoAdDelegate
+
+- (void)rewardedVideoAdDidLoad:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+    [self sendEventWithName:@"RewardDidSucceed" body:nil];
+}
+
+- (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd didFailWithError:(NSError *_Nullable)error {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdVideoDidLoad:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdWillVisible:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdDidVisible:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdWillClose:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdDidClose:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+    [self sendEventWithName:@"RewardDidClose" body:nil];
+}
+
+- (void)rewardedVideoAdDidClick:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdDidPlayFinish:(KSRewardedVideoAd *)rewardedVideoAd didFailWithError:(NSError *_Nullable)error {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdDidClickSkip:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdDidClickSkip:(KSRewardedVideoAd *)rewardedVideoAd currentTime:(NSTimeInterval)currentTime {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAdStartPlay:(KSRewardedVideoAd *)rewardedVideoAd {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd hasReward:(BOOL)hasReward {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd hasReward:(BOOL)hasReward taskType:(KSAdRewardTaskType)taskType currentTaskType:(KSAdRewardTaskType)currentTaskType {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd extraRewardVerify:(KSAdExtraRewardType)extraRewardType {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd hasReward:(BOOL)hasReward extraDict:(NSDictionary *)extraDict {
+    NSLog(@"%s",__FUNCTION__);
+}
+
 #pragma mark delegate
 
-- (void)splashAdDidLoad:(BUSplashAdView *)splashAd {
+- (void)splashAdDidLoad:(BUSplashAd *)splashAd {
     if (splashAd.zoomOutView) {
         UIViewController *parentVC = [UIApplication sharedApplication].keyWindow.rootViewController;
         //Add this view to your container
         [parentVC.view insertSubview:splashAd.zoomOutView belowSubview:splashAd];
         splashAd.zoomOutView.rootViewController = parentVC;
-        splashAd.zoomOutView.delegate = self;
+//        splashAd.zoomOutView.delegate = self;
     }
 }
 
-- (void)splashAdDidClose:(BUSplashAdView *)splashAd {
+- (void)splashAdDidClose:(BUSplashAd *)splashAd {
     if (splashAd.zoomOutView) {
 //        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
 //            [splashAd removeFromSuperview];
@@ -901,20 +1057,20 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     } else{
         // Be careful not to say 'self.splashadview = nil' here.
         // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
-        [splashAd removeFromSuperview];
+//        [splashAd removeFromSuperview];
     }
 }
 
-- (void)splashAdDidClick:(BUSplashAdView *)splashAd {
+- (void)splashAdDidClick:(BUSplashAd *)splashAd {
     if (splashAd.zoomOutView) {
         [splashAd.zoomOutView removeFromSuperview];
     }
     // Be careful not to say 'self.splashadview = nil' here.
     // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
-    [splashAd removeFromSuperview];
+//    [splashAd removeFromSuperview];
 }
 
-- (void)splashAdDidClickSkip:(BUSplashAdView *)splashAd {
+- (void)splashAdDidClickSkip:(BUSplashAd *)splashAd {
     if (splashAd.zoomOutView) {
 //        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
 //            [self removeSplashAdView];
@@ -925,24 +1081,24 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     }
 }
 
-- (void)splashAd:(BUSplashAdView *)splashAd didFailWithError:(NSError *)error {
+- (void)splashAd:(BUSplashAd *)splashAd didFailWithError:(NSError *)error {
     [self removeSplashAdView];
     NSLog(@"%s%@",__FUNCTION__,error);
     [self sendEventWithName:@"ShowSplashFailed" body:nil];
 }
 
-- (void)splashAdWillVisible:(BUSplashAdView *)splashAd {
+- (void)splashAdWillVisible:(BUSplashAd *)splashAd {
 }
 
-- (void)splashAdWillClose:(BUSplashAdView *)splashAd {
+- (void)splashAdWillClose:(BUSplashAd *)splashAd {
 }
 
-- (void)splashAdDidCloseOtherController:(BUSplashAdView *)splashAd interactionType:(BUInteractionType)interactionType {
+- (void)splashAdDidCloseOtherController:(BUSplashAd *)splashAd interactionType:(BUInteractionType)interactionType {
     // No further action after closing the other Controllers, completely remove the 'splashAdView' and avoid memory leaks
     [self removeSplashAdView];
 }
 
-- (void)splashAdCountdownToZero:(BUSplashAdView *)splashAd {
+- (void)splashAdCountdownToZero:(BUSplashAd *)splashAd {
     // When the countdown is over, it is equivalent to clicking Skip to completely remove 'splashAdView' and avoid memory leak
     if (!splashAd.zoomOutView) {    
         [self removeSplashAdView];
@@ -972,7 +1128,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)removeSplashAdView {
     if (self.buSplash) {
-        [self.buSplash removeFromSuperview];
+//        [self.buSplash removeFromSuperview];
         self.buSplash = nil;
     }
 }
