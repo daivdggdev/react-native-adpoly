@@ -11,6 +11,10 @@
 #import <AdSupport/AdSupport.h>
 #import <GDTSplashAd.h>
 #import <GDTSDKConfig.h>
+#import <GDTAppDelegate.h>
+#import <GDTUnifiedInterstitialAd.h>
+#import <GDTRewardVideoAd.h>
+
 #import <Masonry/Masonry.h>
 #import <BUAdSDK/BUAdSDKManager.h>
 #import <BUAdSDK/BUSplashAdView.h>
@@ -26,7 +30,7 @@ typedef NS_ENUM(NSInteger, AdSplashType)
     AdSplashType_BAIDU,
 };
 
-@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate, BUNativeExpressFullscreenVideoAdDelegate, BUNativeExpressRewardedVideoAdDelegate>
+@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate, GDTUnifiedInterstitialAdDelegate, GDTRewardedVideoAdDelegate, BUNativeExpressFullscreenVideoAdDelegate, BUNativeExpressRewardedVideoAdDelegate>
 @property (nonatomic, strong) GDTSplashAd *gdtSplash;
 //@property (nonatomic, strong) UIView *customSplashView;
 @property (nonatomic, strong) UIView *bottomView;
@@ -35,6 +39,9 @@ typedef NS_ENUM(NSInteger, AdSplashType)
 @property (nonatomic, strong) BUNativeExpressRewardedVideoAd *rewardedAd;
 @property (nonatomic, assign) BOOL sInitGDT;
 @property (nonatomic, assign) BOOL sInitBU;
+
+@property (nonatomic, strong) GDTUnifiedInterstitialAd *gdtInterstitial;
+@property (nonatomic, strong) GDTRewardVideoAd *gdtRewardVideoAd;
 
 //@property (nonatomic, strong) IMNative* nativeAd;
 //@property (nonatomic, strong) NSString* nativeContent;
@@ -149,8 +156,13 @@ RCT_EXPORT_MODULE();
         return;
     }
 
-    [GDTSDKConfig registerAppId:appKey];
-    self.sInitGDT = YES;
+    BOOL result = [GDTSDKConfig initWithAppId:appKey];
+    if (result) {
+        NSLog(@"初始化成功");
+    }
+    [GDTSDKConfig startWithCompletionHandler:^(BOOL success, NSError *error) {
+        self.sInitGDT = success;
+    }];
 }
 
 - (void)setupBUAdSDK:(NSString*)appKey handler:(BUCompletionHandler)completionHandler
@@ -161,10 +173,10 @@ RCT_EXPORT_MODULE();
         return;
     }
     
-    [BUAdSDKManager setAppID:appKey];
-    [BUAdSDKManager setLoglevel:BUAdSDKLogLevelVerbose];
-    [BUAdSDKManager setCoppa:0];
-    [BUAdSDKManager setGDPR:0];
+    BUAdSDKConfiguration *configuration = [BUAdSDKConfiguration configuration];
+    configuration.appID = appKey;
+    configuration.privacyProvider = [[BUDPrivacyProvider alloc] init];
+    configuration.appLogoImage = [UIImage imageNamed:@"AppIcon"];
     [BUAdSDKManager startWithAsyncCompletionHandler:^(BOOL success, NSError *error) {
         self.sInitBU = success;
     }];
@@ -193,6 +205,24 @@ RCT_EXPORT_MODULE();
     
 }
 
+- (void)loadGDTFullscreenVideoAd:(NSString*)placementId
+{
+    if (self.gdtInterstitial) {
+        self.gdtInterstitial.delegate = nil;
+    }
+    self.gdtInterstitial = [[GDTUnifiedInterstitialAd alloc] initWithPlacementId:YOUR_PLACEMENT_ID];
+    self.gdtInterstitial.delegate = self;
+    [self.gdtInterstitial loadAd]; // 加载插屏半屏广告
+}
+
+- (void)showGDTFullscreenVideoAd
+{
+    if ([self.gdtInterstitial isAdValid]) {
+        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        [self.gdtInterstitial presentAdFromRootViewController:rootViewController];
+    }
+}
+
 - (void)loadBUFullscreenVideoAd:(NSString*)placementId
 {
     self.fullscreenAd = [[BUNativeExpressFullscreenVideoAd alloc] initWithSlotID:placementId];
@@ -205,6 +235,23 @@ RCT_EXPORT_MODULE();
     if (self.fullscreenAd) {
         UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
         [self.fullscreenAd showAdFromRootViewController:rootViewController];
+    }
+}
+
+- (void)loadGDTRewardVideoAd:(NSString*)placementId 
+                  rewardName:(NSString*)rewardName
+                rewardAmount:(NSInteger)rewardAmount
+{
+    self.gdtRewardVideoAd = [[GDTRewardVideoAd alloc] initWithPlacementId:placementId];
+    self.gdtRewardVideoAd.delegate = self;
+    [self.gdtRewardVideoAd loadAd];
+}
+
+- (void)showGDTRewardVideoAd
+{
+    if (self.gdtRewardVideoAd.isAdValid) {
+        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        [self.gdtRewardVideoAd showAdFromRootViewController:rootViewController];
     }
 }
 
@@ -335,7 +382,7 @@ RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
     RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
-        // [manager setupGDTAdSDK:appKey];
+        [manager loadGDTFullscreenVideoAd:placementId];
     }
     else if ([type isEqual:@"tt"])
     {
@@ -351,7 +398,9 @@ RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type
     RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
-        // [manager setupGDTAdSDK:appKey];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [manager showGDTFullscreenVideoAd];
+        });
     }
     else if ([type isEqual:@"tt"])
     {
@@ -371,7 +420,9 @@ RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
     RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
-        // [manager setupGDTAdSDK:appKey];
+        [manager loadGDTRewardVideoAd:placementId 
+                           rewardName:rewardName
+                         rewardAmount:rewardAmount];
     }
     else if ([type isEqual:@"tt"])
     {
@@ -391,7 +442,9 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
-        // [manager setupGDTAdSDK:appKey];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [manager showGDTRewardVideoAd];
+        });
     }
     else if ([type isEqual:@"tt"])
     {
@@ -445,6 +498,239 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
         self.gdtSplash.delegate = nil;
         self.gdtSplash = nil;
     }
+}
+
+#pragma mark - GDTUnifiedInterstitialAdDelegate
+
+/**
+ *  插屏2.0广告预加载成功回调
+ *  当接收服务器返回的广告数据成功后调用该函数
+ */
+- (void)unifiedInterstitialSuccessToLoadAd:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"eCPM:%ld eCPMLevel:%@", [unifiedInterstitial eCPM], [unifiedInterstitial eCPMLevel]);
+    NSLog(@"videoDuration:%lf isVideo: %@", unifiedInterstitial.videoDuration, @(unifiedInterstitial.isVideoAd));
+}
+
+/**
+ *  插屏2.0广告预加载失败回调
+ *  当接收服务器返回的广告数据失败后调用该函数
+ */
+- (void)unifiedInterstitialFailToLoadAd:(GDTUnifiedInterstitialAd *)unifiedInterstitial error:(NSError *)error
+{
+    NSLog(@"%s ad load fail: %@",__FUNCTION__,error);
+}
+
+- (void)unifiedInterstitialDidDownloadVideo:(GDTUnifiedInterstitialAd *)unifiedInterstitial {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)unifiedInterstitialRenderSuccess:(GDTUnifiedInterstitialAd *)unifiedInterstitial {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)unifiedInterstitialRenderFail:(GDTUnifiedInterstitialAd *)unifiedInterstitial error:(NSError *)error {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  插屏2.0广告将要展示回调
+ *  插屏2.0广告即将展示回调该函数
+ */
+- (void)unifiedInterstitialWillPresentScreen:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+- (void)unifiedInterstitialFailToPresent:(GDTUnifiedInterstitialAd *)unifiedInterstitial error:(NSError *)error {
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  插屏2.0广告视图展示成功回调
+ *  插屏2.0广告展示成功回调该函数
+ */
+- (void)unifiedInterstitialDidPresentScreen:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  插屏2.0广告展示结束回调
+ *  插屏2.0广告展示结束回调该函数
+ */
+- (void)unifiedInterstitialDidDismissScreen:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  当点击下载应用时会调用系统程序打开
+ */
+- (void)unifiedInterstitialWillLeaveApplication:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  插屏2.0广告曝光回调
+ */
+- (void)unifiedInterstitialWillExposure:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"广告已曝光");
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  插屏2.0广告点击回调
+ */
+- (void)unifiedInterstitialClicked:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"广告已点击");
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  点击插屏2.0广告以后即将弹出全屏广告页
+ */
+- (void)unifiedInterstitialAdWillPresentFullScreenModal:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  点击插屏2.0广告以后弹出全屏广告页
+ */
+- (void)unifiedInterstitialAdDidPresentFullScreenModal:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  全屏广告页将要关闭
+ */
+- (void)unifiedInterstitialAdWillDismissFullScreenModal:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+/**
+ *  全屏广告页被关闭
+ */
+- (void)unifiedInterstitialAdDidDismissFullScreenModal:(GDTUnifiedInterstitialAd *)unifiedInterstitial
+{
+    NSLog(@"%s",__FUNCTION__);
+    [self sendEventWithName:@"FullVideoAdDidClose" body:nil];
+}
+
+
+/**
+ * 插屏2.0视频广告 player 播放状态更新回调
+ */
+- (void)unifiedInterstitialAd:(GDTUnifiedInterstitialAd *)unifiedInterstitial playerStatusChanged:(GDTMediaPlayerStatus)status
+{
+    NSString *statusString = [DemoUtil videoPlayerStatusStringFromStatus:status];
+    NSLog(@"%s-----status:%@",__FUNCTION__,statusString);
+}
+
+/**
+ *  投诉成功回调
+ */
+- (void)gdtAdComplainSuccess:(id)ad {
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"广告投诉成功");
+}
+
+#pragma mark - GDTRewardVideoAdDelegate
+- (void)gdt_rewardVideoAdDidLoad:(GDTRewardVideoAd *)rewardedVideoAd
+{
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"eCPM:%ld eCPMLevel:%@", [rewardedVideoAd eCPM], [rewardedVideoAd eCPMLevel]);
+    NSLog(@"videoDuration :%lf rewardAdType:%ld", rewardedVideoAd.videoDuration, rewardedVideoAd.rewardAdType);
+}
+
+
+- (void)gdt_rewardVideoAdVideoDidLoad:(GDTRewardVideoAd *)rewardedVideoAd
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
+
+- (void)gdt_rewardVideoAdWillVisible:(GDTRewardVideoAd *)rewardedVideoAd
+{
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"视频播放页即将打开");
+}
+
+- (void)gdt_rewardVideoAdDidExposed:(GDTRewardVideoAd *)rewardedVideoAd
+{
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"广告已曝光");
+}
+
+- (void)gdt_rewardVideoAdDidClose:(GDTRewardVideoAd *)rewardedVideoAd
+{
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"广告已关闭");
+    [self sendEventWithName:@"RewardDidClose" body:nil];
+}
+
+
+- (void)gdt_rewardVideoAdDidClicked:(GDTRewardVideoAd *)rewardedVideoAd
+{
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"广告已点击");
+}
+
+- (void)gdt_rewardVideoAd:(GDTRewardVideoAd *)rewardedVideoAd didFailWithError:(NSError *)error
+{
+    NSLog(@"%s ad load fail: %@",__FUNCTION__,error);
+    if (error.code == 4014) {
+        NSLog(@"请拉取到广告后再调用展示接口");
+    } else if (error.code == 4016) {
+        NSLog(@"应用方向与广告位支持方向不一致");
+    } else if (error.code == 5012) {
+        NSLog(@"广告已过期");
+    } else if (error.code == 4015) {
+        NSLog(@"广告已经播放过，请重新拉取");
+    } else if (error.code == 5002) {
+        NSLog(@"视频下载失败");
+    } else if (error.code == 5003) {
+        NSLog(@"视频播放失败");
+    } else if (error.code == 5004) {
+        NSLog(@"没有合适的广告");
+    } else if (error.code == 5013) {
+        NSLog(@"请求太频繁，请稍后再试");
+    } else if (error.code == 3002) {
+        NSLog(@"网络连接超时");
+    } else if (error.code == 5027){
+        NSLog(@"页面加载失败");
+    } else {
+        NSLog(@"拉取广告失败");
+    }
+    NSLog(@"ERROR: %@", error);
+}
+
+- (void)gdt_rewardVideoAdDidRewardEffective:(GDTRewardVideoAd *)rewardedVideoAd info:(NSDictionary *)info {
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"播放达到激励条件 transid:%@", [info objectForKey:@"GDT_TRANS_ID"]);
+    [self sendEventWithName:@"RewardDidSucceed" body:nil];
+}
+
+- (void)gdt_rewardVideoAdDidPlayFinish:(GDTRewardVideoAd *)rewardedVideoAd
+{
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"视频播放结束");
+    
+    // if (self.audioSessionSwitch.on) {
+    //     [[AVAudioSession sharedInstance] setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+    // }
+}
+
+- (void)gdtAdComplainSuccess:(id)ad {
+    NSLog(@"%s",__FUNCTION__);
+    NSLog(@"广告投诉成功");
 }
 
 #pragma mark - BUNativeExpressFullscreenVideoAdDelegate
