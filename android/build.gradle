@@ -1,27 +1,46 @@
 buildscript {
 
   repositories {
+    //mintegral sdk依赖   引入mintegral sdk需要添加此maven
+    maven {
+      url "https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_support/"
+    }
+    maven {
+      url "https://artifact.bytedance.com/repository/pangle"
+    }
     mavenCentral()
   }
 
-  dependencies {
-    classpath 'com.android.tools.build:gradle:1.1.1'
+  if (project == rootProject) {
+    repositories {
+      mavenCentral()
+      google()
+    }
+    def buildGradleVersion = ext.has('buildGradlePluginVersion') ? ext.get('buildGradlePluginVersion') : '4.0.1'
+
+    dependencies {
+      classpath "com.android.tools.build:gradle:$buildGradleVersion"
+    }
   }
 }
 
 apply plugin: 'com.android.library'
 
+def safeExtGet(prop, fallback) {
+  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
 android {
-  compileSdkVersion 23
+  compileSdkVersion safeExtGet('compileSdkVersion', 30)
   buildToolsVersion '25.0.0'
 
   defaultConfig {
-    minSdkVersion 16
-    targetSdkVersion 23
+    minSdkVersion safeExtGet('minSdkVersion', 16)
+    targetSdkVersion safeExtGet('targetSdkVersion', 28)
     versionCode 1
     versionName "1.0"
     ndk {
-      abiFilters "armeabi-v7a", "x86"
+      abiFilters "armeabi-v7a", "arm64-v8a", "x86"
     }
   }
   lintOptions {
@@ -29,8 +48,25 @@ android {
   }
 }
 
+repositories {
+  //mintegral sdk依赖   引入mintegral sdk需要添加此maven
+  maven {
+    url "https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_support/"
+  }
+  maven {
+    url "https://artifact.bytedance.com/repository/pangle"
+  }
+  mavenCentral()
+  google()
+  maven {
+    // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+    url "$rootDir/../node_modules/react-native/android"
+  }
+}
+
 dependencies {
-  compile 'com.qq.e.union:union:+'
-  compile 'com.pangle.cn:ads-sdk-pro:4.3.0.8'
-  compile 'com.facebook.react:react-native:+'
+  // compile 'com.qq.e.union:union:+'
+  implementation 'com.qq.e.union:union:4.610.1480'
+  implementation "com.pangle.cn:mediation-sdk:6.0.2.4"
+  implementation 'com.facebook.react:react-native:+'
 }
