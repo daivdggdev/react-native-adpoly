@@ -2,26 +2,32 @@ package com.dwwang.RNAdPoly;
 
 import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
 
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.WritableMap;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.lang.Runnable;
-import android.util.Log;
-import android.net.Uri;
-import android.os.Handler;
-import android.text.TextUtils;
-import android.view.ViewGroup;
 import android.content.Intent;
+import android.text.TextUtils;
+import android.util.Log;
+import android.app.Activity;
+
+import com.bytedance.sdk.openadsdk.AdSlot;
+import com.bytedance.sdk.openadsdk.TTAdConstant;
+import com.bytedance.sdk.openadsdk.TTAdLoadType;
+import com.bytedance.sdk.openadsdk.TTAdManager;
+import com.bytedance.sdk.openadsdk.TTAdNative;
+import com.bytedance.sdk.openadsdk.TTAppDownloadListener;
+import com.bytedance.sdk.openadsdk.TTFullScreenVideoAd;
 
 public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     ReactApplicationContext context;
+
+    private static final String TAG = "RNAdPolyModule";
+    private TTFullScreenVideoAd mttFullVideoAd;
 
     public RNAdPolyModule(ReactApplicationContext context) {
         super(context);
@@ -139,10 +145,93 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         context.startActivity(intent);
     }
 
+    private void loadTTFullScreenVideo(String placementId) {
+        Log.i("AD_DEMO", "loadTTFullScreenVideo placementId = " + placementId);
+        TTAdManager ttAdManager = TTAdManagerHolder.get();
+        // step2:(可选，强烈建议在合适的时机调用):申请部分权限，如read_phone_state,防止获取不了imei时候，下载类广告没有填充的问题。
+        TTAdManagerHolder.get().requestPermissionIfNecessary(this.context);
+        // step3:创建TTAdNative对象,用于调用广告请求接口
+        TTAdNative mTTAdNative = ttAdManager.createAdNative(this.context);
+        AdSlot adSlot = new AdSlot.Builder()
+                .setCodeId(placementId)
+                .setSupportDeepLink(true)
+                .setOrientation(TTAdConstant.VERTICAL)// 必填参数，期望视频的播放方向：TTAdConstant.HORIZONTAL 或 TTAdConstant.VERTICAL
+                .build();
+        // step5:请求广告
+        mTTAdNative.loadFullScreenVideoAd(adSlot, new TTAdNative.FullScreenVideoAdListener() {
+            @Override
+            public void onError(int code, String message) {
+                Log.i(TAG, "Callback --> onError: " + code + ", " + String.valueOf(message));
+                AdHelper.sendEvent("FullVideoAdDidFailed", null);
+            }
+
+            @Override
+            public void onFullScreenVideoAdLoad(TTFullScreenVideoAd ad) {
+                Log.i(TAG, "FullVideoAd loaded  广告类型：" + ad.getFullVideoAdType());
+
+                mttFullVideoAd = ad;
+                mttFullVideoAd.setFullScreenVideoAdInteractionListener(
+                        new TTFullScreenVideoAd.FullScreenVideoAdInteractionListener() {
+
+                            @Override
+                            public void onAdShow() {
+                                Log.i(TAG, "Callback --> FullVideoAd show");
+                            }
+
+                            @Override
+                            public void onAdVideoBarClick() {
+                                Log.i(TAG, "Callback --> FullVideoAd bar click");
+                            }
+
+                            @Override
+                            public void onAdClose() {
+                                Log.i(TAG, "Callback --> FullVideoAd close");
+                                AdHelper.sendEvent("FullVideoAdDidClose", null);
+                            }
+
+                            @Override
+                            public void onVideoComplete() {
+                                Log.i(TAG, "Callback --> FullVideoAd complete");
+                            }
+
+                            @Override
+                            public void onSkippedVideo() {
+                                Log.i(TAG, "Callback --> FullVideoAd skipped");
+                            }
+
+                        });
+            }
+
+            @Override
+            public void onFullScreenVideoCached() {
+            }
+
+            @Override
+            public void onFullScreenVideoCached(TTFullScreenVideoAd ad) {
+                Log.i(TAG, "Callback --> onFullScreenVideoCached");
+                AdHelper.sendEvent("FullVideoAdDidSucceed", null);
+            }
+        });
+    }
+
     private void showTTFullScreenVideo(String placementId) {
         Log.i("AD_DEMO", "showTTFullScreenVideo placementId = " + placementId);
+        // ReactApplicationContext context = getReactApplicationContext();
+        // Intent intent = new Intent(context, TTFullScreenVideoActivity.class);
+        // intent.putExtra("placementId", placementId);
+        // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // context.startActivity(intent);
+        Activity activity = getCurrentActivity();
+        if (mttFullVideoAd != null && activity != null) {
+            mttFullVideoAd.showFullScreenVideoAd(activity);
+            mttFullVideoAd = null;
+        }
+    }
+
+    private void loadGdtFullScreenVideo(String placementId) {
+        Log.i("AD_DEMO", "showGdtFullScreenVideo placementId = " + placementId);
         ReactApplicationContext context = getReactApplicationContext();
-        Intent intent = new Intent(context, TTFullScreenVideoActivity.class);
+        Intent intent = new Intent(context, GDTInterstitialADActivity.class);
         intent.putExtra("placementId", placementId);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);

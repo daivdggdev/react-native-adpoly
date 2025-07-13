@@ -1,6 +1,7 @@
 package com.dwwang.RNAdPoly;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.qq.e.comm.managers.GDTAdSdk;
 
@@ -13,8 +14,20 @@ public class GDTAdManagerHolder {
 
     public static void init(Context context, String appId) {
         if (!sInit) {
-            GDTAdSdk.init(context, appId);
-            sInit = true;
+            GDTAdSdk.initWithoutStart(context, appId); // 调用此接口进行初始化，该接口不会采集用户信息
+            // 调用initWithoutStart后请尽快调用start，否则可能影响广告填充，造成收入下降
+            GDTAdSdk.start(new GDTAdSdk.OnStartListener() {
+                @Override
+                public void onStartSuccess() {
+                    // 推荐开发者在onStartSuccess回调后开始拉广告
+                    sInit = true;
+                }
+
+                @Override
+                public void onStartFailed(Exception e) {
+                    Log.e("gdt onStartFailed:", e.toString());
+                }
+            });
         }
     }
 

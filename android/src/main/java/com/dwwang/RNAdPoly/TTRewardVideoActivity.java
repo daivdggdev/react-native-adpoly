@@ -82,8 +82,6 @@ public class TTRewardVideoActivity extends Activity {
         } else {
             // 模板广告需要设置期望个性化模板广告的大小,单位dp,代码位是否属于个性化模板广告，请在穿山甲平台查看
             adSlot = new AdSlot.Builder()
-                    // 此次加载广告的用途是实时加载，当用来作为缓存时，请使用：TTAdLoadType.LOAD
-                    .setAdLoadType(TTAdLoadType.LOAD)
                     .setCodeId(codeId)
                     // .setRewardName(mRewardName)
                     // .setRewardAmount(mRewardAmount)
@@ -172,6 +170,12 @@ public class TTRewardVideoActivity extends Activity {
                                 " name:" + rewardName + " errorCode:" + errorCode + " errorMsg:" + errorMsg;
                         Log.e(TAG, "Callback --> " + logString);
                         // TToast.show(RewardVideoActivity.this, logString);
+                        AdHelper.sendEvent("RewardDidSucceed", null);
+                    }
+
+                    @Override
+                    public void onRewardArrived(boolean isRewardValid, int rewardType, Bundle extraInfo) {
+                        // 奖励发放
                         AdHelper.sendEvent("RewardDidSucceed", null);
                     }
 

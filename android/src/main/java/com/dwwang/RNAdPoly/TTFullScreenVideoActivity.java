@@ -81,6 +81,8 @@ public class TTFullScreenVideoActivity extends Activity {
         } else {
             adSlot = new AdSlot.Builder()
                     .setCodeId(codeId)
+                    .setSupportDeepLink(true)
+                    .setOrientation(orientation)// 必填参数，期望视频的播放方向：TTAdConstant.HORIZONTAL 或 TTAdConstant.VERTICAL
                     .build();
         }
         // step5:请求广告
@@ -88,6 +90,7 @@ public class TTFullScreenVideoActivity extends Activity {
             @Override
             public void onError(int code, String message) {
                 Log.i(TAG, "Callback --> onError: " + code + ", " + String.valueOf(message));
+                AdHelper.sendEvent("FullVideoAdDidFailed", null);
                 goToMainActivity();
             }
 
@@ -137,6 +140,7 @@ public class TTFullScreenVideoActivity extends Activity {
             @Override
             public void onFullScreenVideoCached(TTFullScreenVideoAd ad) {
                 Log.i(TAG, "Callback --> onFullScreenVideoCached");
+                AdHelper.sendEvent("FullVideoAdDidSucceed", null);
                 if (mttFullVideoAd != null) {
                     // step6:在获取到广告后展示
                     // 展示广告，并传入广告展示的场景

@@ -1,172 +1,120 @@
 package com.dwwang.RNAdPoly;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
-import android.widget.Toast;
 
+import com.bytedance.sdk.openadsdk.LocationProvider;
 import com.bytedance.sdk.openadsdk.TTAdConfig;
+import com.bytedance.sdk.openadsdk.TTAdConstant;
 import com.bytedance.sdk.openadsdk.TTAdManager;
 import com.bytedance.sdk.openadsdk.TTAdSdk;
 import com.bytedance.sdk.openadsdk.TTCustomController;
-import com.bytedance.sdk.openadsdk.mediation.init.MediationConfigUserInfoForSegment;
-import com.bytedance.sdk.openadsdk.mediation.init.MediationPrivacyConfig;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import android.util.Log;
 
 /**
  * 可以用一个单例来保存TTAdManager实例，在需要初始化sdk的时候调用
  */
 public class TTAdManagerHolder {
 
-    private static final String TAG = "TTAdManagerHolder";
-
     private static boolean sInit;
-    private static boolean sStart;
 
     public static TTAdManager get() {
+        if (!sInit) {
+            throw new RuntimeException("TTAdSdk is not init, please check.");
+        }
         return TTAdSdk.getAdManager();
     }
 
-    public static void init(final Context context) {
-        //初始化穿山甲SDK
-        doInit(context);
-    }
-
-    //step1:接入网盟广告sdk的初始化操作，详情见接入文档和穿山甲平台说明
-    private static void doInit(Context context) {
-        if (sInit) {
-            Toast.makeText(context, "您已经初始化过了", Toast.LENGTH_LONG).show();
-            return;
-        }
-        //TTAdSdk.init(context, buildConfig(context));
-        //setp1.1：初始化SDK
-
-        TTAdSdk.init(context, buildConfig(context));
-        sInit = true;
-        Toast.makeText(context, "初始化成功", Toast.LENGTH_LONG).show();
-    }
-
-    public static void start(Context context) {
+    public static void init(Context context, String appId, Boolean requestPermission) {
         if (!sInit) {
-            Toast.makeText(context, "还没初始化SDK，请先进行初始化", Toast.LENGTH_LONG).show();
-            return;
+            TTAdConfig config = new TTAdConfig.Builder()
+                    .appId(appId)
+                    .appName("口袋五线谱")
+                    // .useTextureView(true) //
+                    // 使用TextureView控件播放视频,默认为SurfaceView,当有SurfaceView冲突的场景，可以使用TextureView
+                    .allowShowNotify(true) // 是否允许sdk展示通知栏提示
+                    // .debug(BuildConfig.DEBUG) //测试阶段打开，可以通过日志排查问题，上线时去除该调用
+                    .debug(BuildConfig.DEBUG) // 测试阶段打开，可以通过日志排查问题，上线时去除该调用
+                    .directDownloadNetworkType(TTAdConstant.NETWORK_STATE_WIFI, TTAdConstant.NETWORK_STATE_4G,
+                            TTAdConstant.NETWORK_STATE_5G) // 允许直接下载的网络状态集合
+                    .supportMultiProcess(false)// 是否支持多进程
+                    // .needClearTaskReset()
+                    .customController(new TTCustomController() {
+                        @Override
+                        public boolean isCanUseLocation() {
+                            return requestPermission;
+                        }
+
+                        @Override
+                        public LocationProvider getTTLocation() {
+                            return super.getTTLocation();
+                        }
+
+                        @Override
+                        public boolean alist() {
+                            return requestPermission;
+                        }
+
+                        @Override
+                        public boolean isCanUsePhoneState() {
+                            return requestPermission;
+                        }
+
+                        @Override
+                        public String getDevImei() {
+                            return super.getDevImei();
+                        }
+
+                        @Override
+                        public boolean isCanUseWifiState() {
+                            return requestPermission;
+                        }
+
+                        @Override
+                        public String getMacAddress() {
+                            return super.getMacAddress();
+                        }
+
+                        @Override
+                        public boolean isCanUseWriteExternal() {
+                            return requestPermission;
+                        }
+
+                        @Override
+                        public String getDevOaid() {
+                            return super.getDevOaid();
+                        }
+                    })
+                    .build();
+
+            TTAdSdk.init(context, config);
+
+            TTAdSdk.start(new TTAdSdk.Callback() {
+                /**
+                 * 初始化成功回调
+                 * 注意：开发者需要在success回调之后再去请求广告
+                 */
+                @Override
+                public void success() {
+                    sInit = true;
+                    Log.d("TTAdSdk", "init success");
+                    // 初始化之后申请下权限，开发者如果不想申请可以将此处删除
+                    TTAdSdk.getAdManager().requestPermissionIfNecessary(context);
+                }
+
+                /**
+                 * @param code 初始化失败回调错误码
+                 * @param msg  初始化失败回调信息
+                 */
+                @Override
+                public void fail(int code, String msg) {
+                    Log.d("TTAdSdk", "init fail, code = " + code + "s = " + msg);
+                }
+            });
         }
-        if (sStart) {
-            return;
-        }
-        //setp1.2：启动SDK
-
-        TTAdSdk.start(new TTAdSdk.Callback() {
-            @Override
-            public void success() {
-                Log.i(TAG, "success: " + TTAdSdk.isSdkReady());
-            }
-
-            @Override
-            public void fail(int code, String msg) {
-                sStart = false;
-                Log.i(TAG, "fail:  code = " + code + " msg = " + msg);
-            }
-        });
-        sStart = true;
     }
 
-    private static TTAdConfig buildConfig(Context context) {
-
-        return new TTAdConfig.Builder()
-                /**
-                 * 注：需要替换成在媒体平台申请的appID ，切勿直接复制
-                 */
-                .appId("5001121")
-                .appName("APP测试媒体")
-                /**
-                 * 上线前需要关闭debug开关，否则会影响性能
-                 */
-                .debug(true)
-                /**
-                 * 使用聚合功能此开关必须设置为true，默认为false，不会初始化聚合模板，聚合功能会吟唱
-                 */
-                .useMediation(true)
-//                .customController(getTTCustomController()) //如果您需要设置隐私策略请参考该api
-//                .setMediationConfig(new MediationConfig.Builder() //可设置聚合特有参数详细设置请参考该api
-//                        .setMediationConfigUserInfoForSegment(getUserInfoForSegment())//如果您需要配置流量分组信息请参考该api
-//                        .build())
-                .build();
-    }
-
-    private static MediationConfigUserInfoForSegment getUserInfoForSegment(){
-        MediationConfigUserInfoForSegment userInfo = new MediationConfigUserInfoForSegment();
-        userInfo.setUserId("msdk-demo");
-        userInfo.setGender(MediationConfigUserInfoForSegment.GENDER_MALE);
-        userInfo.setChannel("msdk-channel");
-        userInfo.setSubChannel("msdk-sub-channel");
-        userInfo.setAge(999);
-        userInfo.setUserValueGroup("msdk-demo-user-value-group");
-
-        Map<String, String> customInfos = new HashMap<>();
-        customInfos.put("aaaa", "test111");
-        customInfos.put("bbbb", "test222");
-        userInfo.setCustomInfos(customInfos);
-        return userInfo;
-    }
-
-    private static TTCustomController getTTCustomController(){
-        return new TTCustomController() {
-
-            @Override
-            public boolean isCanUseWifiState() {
-                return super.isCanUseWifiState();
-            }
-
-            @Override
-            public String getMacAddress() {
-                return super.getMacAddress();
-            }
-
-            @Override
-            public boolean isCanUseWriteExternal() {
-                return super.isCanUseWriteExternal();
-            }
-
-            @Override
-            public String getDevOaid() {
-                return super.getDevOaid();
-            }
-
-            @Override
-            public boolean isCanUseAndroidId() {
-                return super.isCanUseAndroidId();
-            }
-
-            @Override
-            public String getAndroidId() {
-                return super.getAndroidId();
-            }
-
-            @Override
-            public MediationPrivacyConfig getMediationPrivacyConfig() {
-                return new MediationPrivacyConfig() {
-
-                    @Override
-                    public boolean isLimitPersonalAds() {
-                        return super.isLimitPersonalAds();
-                    }
-
-                    @Override
-                    public boolean isProgrammaticRecommend() {
-                        return super.isProgrammaticRecommend();
-                    }
-                };
-            }
-
-            @Override
-            public boolean isCanUsePermissionRecordAudio() {
-                return super.isCanUsePermissionRecordAudio();
-            }
-        };
+    public static boolean isInitSuccess() {
+        return TTAdSdk.isSdkReady();
     }
 }

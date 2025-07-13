@@ -44,18 +44,18 @@ public class TTSplashActivity extends Activity {
         mSplashContainer = findViewById(R.id.fl_content);
 
         getExtraInfo();
-        
+
         // 加载并展示广告
         loadAndShowSplashAd();
     }
 
     private void getExtraInfo() {
         Intent intent = getIntent();
-        if(intent == null) {
+        if (intent == null) {
             return;
         }
         String codeId = intent.getStringExtra("placementId");
-        if (!TextUtils.isEmpty(codeId)){
+        if (!TextUtils.isEmpty(codeId)) {
             mCodeId = codeId;
         }
     }
@@ -65,7 +65,7 @@ public class TTSplashActivity extends Activity {
 
         AdSlot adSlot = new AdSlot.Builder()
                 .setCodeId(mCodeId)
-                .setImageAcceptedSize(UIUtils.getScreenWidthInPx(this),UIUtils.getScreenHeightInPx(this))
+                .setImageAcceptedSize(UIUtils.getScreenWidthInPx(this), UIUtils.getScreenHeightInPx(this))
                 .build();
 
         /** 2、创建TTAdNative对象 */
@@ -156,8 +156,8 @@ public class TTSplashActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         /** 6、在onDestroy中销毁广告 */
-        if (mCsjSplashAd != null && mCsjSplashAd.getMediationManager() != null) {
-            mCsjSplashAd.getMediationManager().destroy();
+        if (mCsjSplashAd != null) {
+            mCsjSplashAd = null;
         }
     }
 }

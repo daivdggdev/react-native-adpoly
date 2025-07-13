@@ -30,7 +30,8 @@ import java.util.List;
 /**
  * 这是demo工程的入口Activity，在这里会首次调用广点通的SDK。
  *
- * 在调用SDK之前，如果您的App的targetSDKVersion >= 23，那么一定要把"READ_PHONE_STATE"、"WRITE_EXTERNAL_STORAGE"、"ACCESS_FINE_LOCATION"这几个权限申请到，否则SDK将不会工作。
+ * 在调用SDK之前，如果您的App的targetSDKVersion >=
+ * 23，那么一定要把"READ_PHONE_STATE"、"WRITE_EXTERNAL_STORAGE"、"ACCESS_FINE_LOCATION"这几个权限申请到，否则SDK将不会工作。
  */
 public class SplashActivity extends Activity implements SplashADListener {
 
@@ -71,12 +72,13 @@ public class SplashActivity extends Activity implements SplashADListener {
       findViewById(R.id.app_logo).setVisibility(View.GONE);
     }
 
-    // 如果targetSDKVersion >= 23，就要申请好权限。如果您的App没有适配到Android6.0（即targetSDKVersion < 23），那么只需要在这里直接调用fetchSplashAD接口。
+    // 如果targetSDKVersion >= 23，就要申请好权限。如果您的App没有适配到Android6.0（即targetSDKVersion <
+    // 23），那么只需要在这里直接调用fetchSplashAD接口。
     // if (Build.VERSION.SDK_INT >= 23) {
-    //   checkAndRequestPermission();
+    // checkAndRequestPermission();
     // } else {
-      // 如果是Android6.0以下的机器，默认在安装时获得了所有权限，可以直接调用SDK
-      fetchSplashAD(this, container, skipView, placementId, this, 0);
+    // 如果是Android6.0以下的机器，默认在安装时获得了所有权限，可以直接调用SDK
+    fetchSplashAD(this, container, skipView, placementId, this, 0);
     // }
   }
 
@@ -144,18 +146,18 @@ public class SplashActivity extends Activity implements SplashADListener {
   /**
    * 拉取开屏广告，开屏广告的构造方法有3种，详细说明请参考开发者文档。
    *
-   * @param activity        展示广告的activity
-   * @param adContainer     展示广告的大容器
-   * @param skipContainer   自定义的跳过按钮：传入该view给SDK后，SDK会自动给它绑定点击跳过事件。SkipView的样式可以由开发者自由定制，其尺寸限制请参考activity_splash.xml或者接入文档中的说明。
-   * @param posId           广告位ID
-   * @param adListener      广告状态监听器
-   * @param fetchDelay      拉取广告的超时时长：取值范围[3000, 5000]，设为0表示使用广点通SDK默认的超时时长。
+   * @param activity      展示广告的activity
+   * @param adContainer   展示广告的大容器
+   * @param skipContainer 自定义的跳过按钮：传入该view给SDK后，SDK会自动给它绑定点击跳过事件。SkipView的样式可以由开发者自由定制，其尺寸限制请参考activity_splash.xml或者接入文档中的说明。
+   * @param posId         广告位ID
+   * @param adListener    广告状态监听器
+   * @param fetchDelay    拉取广告的超时时长：取值范围[3000, 5000]，设为0表示使用广点通SDK默认的超时时长。
    */
   private void fetchSplashAD(Activity activity, ViewGroup adContainer, View skipContainer,
       String posId, SplashADListener adListener, int fetchDelay) {
     fetchSplashADTime = System.currentTimeMillis();
     splashAD = new SplashAD(activity, posId, adListener, fetchDelay);
-    splashAD.fetchAndShowIn(adContainer);
+    splashAD.fetchAdOnly();
   }
 
   @Override
@@ -188,7 +190,8 @@ public class SplashActivity extends Activity implements SplashADListener {
 
   @Override
   public void onADLoaded(long expireTimestamp) {
-    Log.i("AD_DEMO", "SplashADFetch expireTimestamp:"+expireTimestamp);
+    Log.i("AD_DEMO", "SplashADFetch expireTimestamp:" + expireTimestamp);
+    splashAD.showAd(container);
   }
 
   @Override
@@ -211,9 +214,10 @@ public class SplashActivity extends Activity implements SplashADListener {
      * 给出的延时逻辑是从拉取广告开始算开屏最少持续多久，仅供参考，开发者可自定义延时逻辑，如果开发者采用demo
      * 中给出的延时逻辑，也建议开发者考虑自定义minSplashTimeWhenNoAD的值
      **/
-    long alreadyDelayMills = System.currentTimeMillis() - fetchSplashADTime;//从拉广告开始到onNoAD已经消耗了多少时间
-    long shouldDelayMills = alreadyDelayMills > minSplashTimeWhenNoAD ? 0 : minSplashTimeWhenNoAD
-        - alreadyDelayMills;//为防止加载广告失败后立刻跳离开屏可能造成的视觉上类似于"闪退"的情况，根据设置的minSplashTimeWhenNoAD
+    long alreadyDelayMills = System.currentTimeMillis() - fetchSplashADTime;// 从拉广告开始到onNoAD已经消耗了多少时间
+    long shouldDelayMills = alreadyDelayMills > minSplashTimeWhenNoAD ? 0
+        : minSplashTimeWhenNoAD
+            - alreadyDelayMills;// 为防止加载广告失败后立刻跳离开屏可能造成的视觉上类似于"闪退"的情况，根据设置的minSplashTimeWhenNoAD
     // 计算出还需要延时多久
     handler.postDelayed(new Runnable() {
       @Override
@@ -229,7 +233,7 @@ public class SplashActivity extends Activity implements SplashADListener {
    */
   private void next() {
     if (canJump) {
-      //this.startActivity(new Intent(this, DemoListActivity.class));
+      // this.startActivity(new Intent(this, DemoListActivity.class));
       this.finish();
     } else {
       canJump = true;
