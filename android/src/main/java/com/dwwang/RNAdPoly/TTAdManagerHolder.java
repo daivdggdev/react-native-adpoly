@@ -9,6 +9,9 @@ import com.bytedance.sdk.openadsdk.TTAdManager;
 import com.bytedance.sdk.openadsdk.TTAdSdk;
 import com.bytedance.sdk.openadsdk.TTCustomController;
 
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
+
 import android.util.Log;
 
 /**
@@ -98,8 +101,15 @@ public class TTAdManagerHolder {
                 public void success() {
                     sInit = true;
                     Log.d("TTAdSdk", "init success");
+
+                    WritableMap params = Arguments.createMap();
+                    params.putString("type", "tt");
+                    AdHelper.sendEvent("AdInitSuccess", params);
+
                     // 初始化之后申请下权限，开发者如果不想申请可以将此处删除
-                    TTAdSdk.getAdManager().requestPermissionIfNecessary(context);
+                    if (requestPermission) {
+                        TTAdSdk.getAdManager().requestPermissionIfNecessary(context);
+                    }
                 }
 
                 /**

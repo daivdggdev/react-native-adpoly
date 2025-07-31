@@ -5,6 +5,9 @@ import android.util.Log;
 
 import com.qq.e.comm.managers.GDTAdSdk;
 
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
+
 /**
  * 可以用一个单例来保存TTAdManager实例，在需要初始化sdk的时候调用
  */
@@ -21,6 +24,11 @@ public class GDTAdManagerHolder {
                 public void onStartSuccess() {
                     // 推荐开发者在onStartSuccess回调后开始拉广告
                     sInit = true;
+                    Log.d("GDTAdSdk", "init success");
+
+                    WritableMap params = Arguments.createMap();
+                    params.putString("type", "gdt");
+                    AdHelper.sendEvent("AdInitSuccess", params);
                 }
 
                 @Override
