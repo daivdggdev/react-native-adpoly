@@ -166,7 +166,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void showSplash(String type, final String placementId) {
-        Log.i(TAG, "showSplash type = " + type);
+        Log.i(TAG, "showSplash type = " + type + ", placementId = " + placementId);
         switch (type) {
             case "gdt":
                 showGdtSplash(placementId);
@@ -184,7 +184,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void loadInterAd(String type, String placementId) {
-        Log.i(TAG, "loadInterAd type = " + type);
+        Log.i(TAG, "loadInterAd type = " + type + ", placementId = " + placementId);
         runOnUiThread(() -> {
             switch (type) {
                 case "tt":
@@ -236,7 +236,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void loadRewardVideo(String type, String placementId, String rewardName, int rewardAmount) {
-        Log.i(TAG, "loadRewardVideo type = " + type);
+        Log.i(TAG, "loadRewardVideo type = " + type + ", placementId = " + placementId);
         this.isRewardSuccess = false;
         runOnUiThread(() -> {
             switch (type) {
@@ -259,21 +259,21 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void showRewardVideo(String type, String placementId, String rewardName, int rewardAmount) {
+    public void showRewardVideo(String type, String rewardName, int rewardAmount) {
         Log.i(TAG, "showRewardVideo type = " + type);
         runOnUiThread(() -> {
             switch (type) {
                 case "tt":
-                    showTTRewardVideo(placementId, rewardName, rewardAmount);
+                    showTTRewardVideo(rewardName, rewardAmount);
                     break;
                 case "gdt":
-                    showGdtRewardVideo(placementId, rewardName, rewardAmount);
+                    showGdtRewardVideo(rewardName, rewardAmount);
                     break;
                 case "ks":
-                    showKsRewardVideo(placementId, rewardName, rewardAmount);
+                    showKsRewardVideo(rewardName, rewardAmount);
                     break;
                 case "sigmob":
-                    showSigmobRewardVideo(placementId, rewardName, rewardAmount);
+                    showSigmobRewardVideo(rewardName, rewardAmount);
                     break;
                 default:
                     break;
@@ -602,7 +602,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     private void loadTTInterAd(String placementId) {
-        Log.i(TAG, "loadTTFullScreenVideo placementId = " + placementId);
+        Log.i(TAG, "loadTTInterAd placementId = " + placementId);
         TTAdManager ttAdManager = TTAdManagerHolder.get();
         TTAdNative mTTAdNative = ttAdManager.createAdNative(this.context);
         AdSlot adSlot = new AdSlot.Builder()
@@ -684,7 +684,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     private void loadGdtInterAd(String placementId) {
-        Log.i(TAG, "showGdtFullScreenVideo placementId = " + placementId);
+        Log.i(TAG, "loadGdtInterAd placementId = " + placementId);
         // ReactApplicationContext context = getReactApplicationContext();
         // Intent intent = new Intent(context, GDTInterstitialADActivity.class);
         // intent.putExtra("placementId", placementId);
@@ -1121,8 +1121,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         });
     }
 
-    private void showTTRewardVideo(String placementId, String rewardName, int rewardAmount) {
-        Log.i(TAG, "showTTRewardVideo placementId = " + placementId);
+    private void showTTRewardVideo(String rewardName, int rewardAmount) {
         Activity activity = getCurrentActivity();
         if (mttRewardVideoAd != null && activity != null) {
             mttRewardVideoAd.showRewardVideoAd(activity);
@@ -1255,8 +1254,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         mRewardVideoAD.loadAD();
     }
 
-    private void showGdtRewardVideo(String placementId, String rewardName, int rewardAmount) {
-        Log.i(TAG, "showGdtRewardVideo placementId = " + placementId);
+    private void showGdtRewardVideo(String rewardName, int rewardAmount) {
         if (mRewardVideoAD != null && !mRewardVideoAD.hasShown() && mRewardVideoAD.isValid()) {
             // 广告展示检查2：当前广告数据还没有展示过
             // 广告展示检查3：展示广告前判断广告数据未过期
@@ -1311,7 +1309,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     }
 
     // 2.展示激励视频，可以竖屏展示也可以横屏展示，建议与当前屏幕方向一致
-    private void showKsRewardVideo(String placementId, String rewardName, int rewardAmount) {
+    private void showKsRewardVideo(String rewardName, int rewardAmount) {
         Activity activity = getCurrentActivity();
         if (activity == null || mKsRewardVideoAd == null) {
             return;
@@ -1476,7 +1474,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void showSigmobRewardVideo(String placementId, String rewardName, int rewardAmount) {
+    private void showSigmobRewardVideo(String rewardName, int rewardAmount) {
         HashMap<String, String> option = new HashMap<>();
         option.put(WindAds.AD_SCENE_DESC, rewardName);
         if (windRewardedVideoAd != null && windRewardedVideoAd.isReady()) {

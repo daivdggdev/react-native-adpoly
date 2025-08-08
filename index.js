@@ -3,40 +3,40 @@
 var RNAdPoly = require('react-native').NativeModules.RNAdPoly;
 var IsAndroid = RNAdPoly.IsAndroid;
 
-function init(type, appKey, requestPermission) {
-  RNAdPoly.init(type, appKey, requestPermission);
+function init(type, appId, appKey, requestPermission) {
+  RNAdPoly.init(type, appId, appKey, requestPermission);
 }
 
 function requestPermissionIfNecessary() {
   RNAdPoly.requestPermissionIfNecessary();
 }
 
-function showSplash(type, appKey, placementId) {
-  RNAdPoly.showSplash(type, appKey, placementId);
+function showSplash(type, placementId) {
+  RNAdPoly.showSplash(type, placementId);
 }
 
-function loadFullScreenVideo(type, appKey, placementId) {
-  RNAdPoly.loadFullScreenVideo(type, appKey, placementId);
+function loadInterAd(type, placementId) {
+  RNAdPoly.loadInterAd(type, placementId);
 }
 
-function showFullScreenVideo(type, appKey, placementId) {
-  RNAdPoly.showFullScreenVideo(type, appKey, placementId);
+function showInterAd(type) {
+  RNAdPoly.showInterAd(type);
 }
 
-function loadRewardVideo(type, appKey, placementId, rewardName, rewardAmount) {
-  RNAdPoly.loadRewardVideo(type, appKey, placementId, rewardName, rewardAmount);
+function loadRewardVideo(type, placementId, rewardName, rewardAmount) {
+  RNAdPoly.loadRewardVideo(type, placementId, rewardName, rewardAmount);
 }
 
-function showRewardVideo(type, appKey, placementId, rewardName, rewardAmount) {
-  RNAdPoly.showRewardVideo(type, appKey, placementId, rewardName, rewardAmount);
+function showRewardVideo(type, rewardName, rewardAmount) {
+  RNAdPoly.showRewardVideo(type, rewardName, rewardAmount);
 }
 
 module.exports = {
   init,
   requestPermissionIfNecessary,
   showSplash,
-  loadFullScreenVideo,
-  showFullScreenVideo,
+  loadInterAd,
+  showInterAd,
   loadRewardVideo,
   showRewardVideo
 };
