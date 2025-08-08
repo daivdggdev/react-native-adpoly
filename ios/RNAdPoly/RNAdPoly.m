@@ -349,54 +349,44 @@ RCT_EXPORT_MODULE();
 }
 
 RCT_EXPORT_METHOD(init:(NSString*)type
+                  appId:(NSString*)appId
                   appKey:(NSString*)appKey
                   requestPermission:(BOOL)requestPermission)
 {
-    NSLog(@"init type: %@, appKey: %@", type, appKey);
+    NSLog(@"init type: %@, appId: %@, appKey: %@", type, appId, appKey);
     RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
-        [manager setupGDTAdSDK:appKey];
+        [manager setupGDTAdSDK:appId];
     }
     else if ([type isEqual:@"tt"])
     {
-        [manager setupBUAdSDK:appKey handler:nil];
+        [manager setupBUAdSDK:appId handler:nil];
     }
     else if ([type isEqual:@"ks"])
     {
-        [manager setupKSAdSDK:appKey];
+        [manager setupKSAdSDK:appId];
     }
 }
 
 
 - (void)showSplashImpl:(NSString*)type
-                appKey:(NSString*)appKey
            placementId:(NSString*)placementId
 {
     RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
-        [manager setupGDTAdSDK:appKey];
         [manager showGdtSplash:placementId];
     }
     else if ([type isEqual:@"tt"])
     {
-        [manager setupBUAdSDK:appKey handler:^(BOOL success, NSError *error) {
-            if (!success) {
-                NSLog(@"setupBUAdSDK error: %@", error);
-                return;
-            }
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [manager showBuSplash:placementId];
-            });
-        }];
-        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [manager showBuSplash:placementId];
+        });
     }
 }
 
 RCT_EXPORT_METHOD(showSplash:(NSString*)type
-                  appKey:(NSString*)appKey
                   placementId:(NSString*)placementId)
 {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -410,19 +400,18 @@ RCT_EXPORT_METHOD(showSplash:(NSString*)type
         
         if (@available(iOS 14, *)) {
           [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
-              [self showSplashImpl:type appKey:appKey placementId:placementId];
+              [self showSplashImpl:type placementId:placementId];
           }];
         } else {
-            [self showSplashImpl:type appKey:appKey placementId:placementId];
+            [self showSplashImpl:type placementId:placementId];
         }
     });
 }
 
-RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
-                  appKey:(NSString*)appKey
+RCT_EXPORT_METHOD(loadInterAd:(NSString*)type
                   placementId:(NSString*)placementId)
 {
-    NSLog(@"loadFullScreenVideo type: %@, placementId: %@", type, placementId);
+    NSLog(@"loadInterAd type: %@, placementId: %@", type, placementId);
     RNAdPoly *manager = [RNAdPoly sharedInstance];
     if ([type isEqual:@"gdt"])
     {
@@ -438,9 +427,7 @@ RCT_EXPORT_METHOD(loadFullScreenVideo:(NSString*)type
     }
 }
 
-RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type
-                  appKey:(NSString*)appKey
-                  placementId:(NSString*)placementId)
+RCT_EXPORT_METHOD(showInterAd:(NSString*)type)
 {
     NSLog(@"showFullScreenVideo type: %@", type);
     RNAdPoly *manager = [RNAdPoly sharedInstance];
@@ -465,7 +452,6 @@ RCT_EXPORT_METHOD(showFullScreenVideo:(NSString*)type
 }
 
 RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
-                  appKey:(NSString*)appKey
                   placementId:(NSString*)placementId
                   rewardName:(NSString*)rewardName
                rewardAmount:(NSInteger)rewardAmount)
@@ -487,7 +473,6 @@ RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
 }
 
 RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
-                  appKey:(NSString*)appKey
                   placementId:(NSString*)placementId
                   rewardName:(NSString*)rewardName
                rewardAmount:(NSInteger)rewardAmount)

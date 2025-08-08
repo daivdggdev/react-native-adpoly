@@ -120,9 +120,9 @@ public class TTSplashActivity extends Activity {
         int splashHeightPx;
 
         if (mIsHalfSize) {
-            // 开屏高度 = 屏幕高度 - 下方预留的高度，demo中是预留了屏幕高度的1/5，因此开屏高度传入 屏幕高度*4/5
-            splashHeightDp = screenHeightDp * 4 / 5.f;
-            splashHeightPx = (int) (screenHeightPx * 4 / 5.f);
+            // 开屏高度 = 屏幕高度 - 下方预留的高度，demo中是预留了屏幕高度的1/6，因此开屏高度传入 屏幕高度*5/6
+            splashHeightDp = screenHeightDp * 5 / 6.f;
+            splashHeightPx = (int) (screenHeightPx * 5 / 6.f);
         } else {
             splashHeightDp = screenHeightDp;
             splashHeightPx = screenHeightPx;

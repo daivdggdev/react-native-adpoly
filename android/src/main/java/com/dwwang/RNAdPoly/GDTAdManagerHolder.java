@@ -24,7 +24,7 @@ public class GDTAdManagerHolder {
                 public void onStartSuccess() {
                     // 推荐开发者在onStartSuccess回调后开始拉广告
                     sInit = true;
-                    Log.d("GDTAdSdk", "init success");
+                    Log.d("RNAdPolyModule", "gdt init success");
 
                     WritableMap params = Arguments.createMap();
                     params.putString("type", "gdt");

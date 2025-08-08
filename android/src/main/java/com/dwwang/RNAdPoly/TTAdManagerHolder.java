@@ -100,7 +100,7 @@ public class TTAdManagerHolder {
                 @Override
                 public void success() {
                     sInit = true;
-                    Log.d("TTAdSdk", "init success");
+                    Log.d("RNAdPolyModule", "tt init success");
 
                     WritableMap params = Arguments.createMap();
                     params.putString("type", "tt");
@@ -118,7 +118,7 @@ public class TTAdManagerHolder {
                  */
                 @Override
                 public void fail(int code, String msg) {
-                    Log.d("TTAdSdk", "init fail, code = " + code + "s = " + msg);
+                    Log.d("RNAdPolyModule", "tt init fail, code = " + code + "s = " + msg);
                 }
             });
         }

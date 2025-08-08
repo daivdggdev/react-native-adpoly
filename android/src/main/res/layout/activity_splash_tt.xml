@@ -26,7 +26,7 @@
             android:id="@+id/splash_container_half_size"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="4"/>
+            android:layout_weight="5"/>
 
         <!-- 底部应用信息区域，与AppIcon布局保持一致 -->
         <LinearLayout

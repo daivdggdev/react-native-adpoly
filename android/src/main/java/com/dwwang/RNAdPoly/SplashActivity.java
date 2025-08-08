@@ -51,7 +51,6 @@ public class SplashActivity extends Activity implements SplashADListener {
 
     private SplashAD splashAD;
     public boolean canJump = false;
-    private String appKey;
     private String placementId;
     private boolean mIsHalfSize = false;// 是否是半全屏开屏
 
@@ -81,7 +80,6 @@ public class SplashActivity extends Activity implements SplashADListener {
         mSplashHalfSizeLayout = (LinearLayout) findViewById(R.id.splash_half_size_layout);
         mSplashSplashContainer = (FrameLayout) findViewById(R.id.splash_container_half_size);
 
-        appKey = getIntent().getStringExtra("appKey");
         placementId = getIntent().getStringExtra("placementId");
         mIsHalfSize = getIntent().getBooleanExtra("is_half_size", false);
 
