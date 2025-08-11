@@ -72,6 +72,7 @@ import com.sigmob.windad.rewardVideo.WindRewardVideoAdListener;
 import com.baidu.mobads.sdk.api.AdSettings;
 import com.baidu.mobads.sdk.api.BDAdConfig;
 import com.baidu.mobads.sdk.api.BDDialogParams;
+import com.baidu.mobads.sdk.api.RewardVideoAd;
 import com.baidu.mobads.sdk.api.ExpressInterstitialAd;
 import com.baidu.mobads.sdk.api.ExpressInterstitialListener;
 import com.baidu.mobads.sdk.api.MobadsPermissionSettings;
@@ -99,7 +100,9 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     private TTRewardVideoAd mttRewardVideoAd;
     private KsRewardVideoAd mKsRewardVideoAd;
     private WindRewardVideoAd windRewardedVideoAd;
+    private RewardVideoAd mBaiduRewardVideoAd;
     private boolean isRewardSuccess = false;
+    private boolean isLoadAnShowReward = false;
 
     public final String APP_NAME = "口袋五线谱";
     public final String BUGLY_APP_ID = "7c356cab77";
@@ -177,6 +180,9 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             case "ks":
                 showKsSplash(placementId);
                 break;
+            case "baidu":
+                showBaiduSplash(placementId);
+                break;
             default:
                 break;
         }
@@ -238,24 +244,8 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     public void loadRewardVideo(String type, String placementId, String rewardName, int rewardAmount) {
         Log.i(TAG, "loadRewardVideo type = " + type + ", placementId = " + placementId);
         this.isRewardSuccess = false;
-        runOnUiThread(() -> {
-            switch (type) {
-                case "tt":
-                    loadTTRewardVideo(placementId, rewardName, rewardAmount);
-                    break;
-                case "gdt":
-                    loadGdtRewardVideo(placementId, rewardName, rewardAmount);
-                    break;
-                case "ks":
-                    loadKsRewardVideo(placementId, rewardName, rewardAmount);
-                    break;
-                case "sigmob":
-                    loadSigmobRewardVideo(placementId, rewardName, rewardAmount);
-                    break;
-                default:
-                    break;
-            }
-        });
+        this.isLoadAnShowReward = false;
+        loadRewardVideoImpl(type, placementId, rewardName, rewardAmount);
     }
 
     @ReactMethod
@@ -274,6 +264,41 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                     break;
                 case "sigmob":
                     showSigmobRewardVideo(rewardName, rewardAmount);
+                    break;
+                case "baidu":
+                    showBaiduRewardVideo(rewardName, rewardAmount);
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+
+    @ReactMethod
+    public void loadAndShowRewardVideo(String type, String placementId, String rewardName, int rewardAmount) {
+        Log.i(TAG, "loadAndShowRewardVideo type = " + type + ", placementId = " + placementId);
+        this.isRewardSuccess = false;
+        this.isLoadAnShowReward = true;
+        loadRewardVideoImpl(type, placementId, rewardName, rewardAmount);
+    }
+
+    private void loadRewardVideoImpl(String type, String placementId, String rewardName, int rewardAmount) {
+        runOnUiThread(() -> {
+            switch (type) {
+                case "tt":
+                    loadTTRewardVideo(placementId, rewardName, rewardAmount);
+                    break;
+                case "gdt":
+                    loadGdtRewardVideo(placementId, rewardName, rewardAmount);
+                    break;
+                case "ks":
+                    loadKsRewardVideo(placementId, rewardName, rewardAmount);
+                    break;
+                case "sigmob":
+                    loadSigmobRewardVideo(placementId, rewardName, rewardAmount);
+                    break;
+                case "baidu":
+                    loadBaiduRewardVideo(placementId, rewardName, rewardAmount);
                     break;
                 default:
                     break;
@@ -595,6 +620,20 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
 
         ReactApplicationContext context = getReactApplicationContext();
         Intent intent = new Intent(context, KSSplashActivity.class);
+        intent.putExtra("placementId", placementId);
+        intent.putExtra("is_half_size", true);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+    private void showBaiduSplash(String placementId) {
+        Log.i(TAG, "showBaiduSplash placementId = " + placementId);
+        if (TextUtils.isEmpty(placementId)) {
+            return;
+        }
+
+        ReactApplicationContext context = getReactApplicationContext();
+        Intent intent = new Intent(context, BaiduSplashActivity.class);
         intent.putExtra("placementId", placementId);
         intent.putExtra("is_half_size", true);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1054,6 +1093,7 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             @Override
             public void onRewardVideoAdLoad(TTRewardVideoAd ad) {
                 Log.e(TAG, "Callback --> onRewardVideoAdLoad");
+                AdHelper.sendEvent("RewardDidLoad", null);
 
                 mttRewardVideoAd = ad;
                 mttRewardVideoAd.setRewardAdInteractionListener(new TTRewardVideoAd.RewardAdInteractionListener() {
@@ -1117,6 +1157,10 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                         // TToast.show(RewardVideoActivity.this, "rewardVideoAd has onSkippedVideo");
                     }
                 });
+
+                if (isLoadAnShowReward) {
+                    showTTRewardVideo(rewardName, rewardAmount);
+                }
             }
         });
     }
@@ -1171,6 +1215,11 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             @Override
             public void onVideoCached() {
                 Log.i(TAG, "onVideoCached");
+                AdHelper.sendEvent("RewardDidLoad", null);
+
+                if (isLoadAnShowReward) {
+                    showGdtRewardVideo(rewardName, rewardAmount);
+                }
             }
 
             /**
@@ -1293,6 +1342,10 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                                 + (System.currentTimeMillis() - startTime));
                         if (adList != null && adList.size() > 0) {
                             mKsRewardVideoAd = adList.get(0);
+                            AdHelper.sendEvent("RewardDidLoad", null);
+                            if (isLoadAnShowReward) {
+                                showKsRewardVideo(rewardName, rewardAmount);
+                            }
                         }
                     }
 
@@ -1303,6 +1356,10 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
                                 + (System.currentTimeMillis() - startTime));
                         if (adList != null && adList.size() > 0) {
                             mKsRewardVideoAd = adList.get(0);
+                            AdHelper.sendEvent("RewardDidLoad", null);
+                            if (isLoadAnShowReward) {
+                                showKsRewardVideo(rewardName, rewardAmount);
+                            }
                         }
                     }
                 });
@@ -1413,6 +1470,10 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
             @Override
             public void onRewardAdLoadSuccess(final String placementId) {
                 Log.d(TAG, "------onRewardAdLoadSuccess------" + placementId);
+                AdHelper.sendEvent("RewardDidLoad", null);
+                if (isLoadAnShowReward) {
+                    showSigmobRewardVideo(rewardName, rewardAmount);
+                }
             }
 
             @Override
@@ -1480,6 +1541,129 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
         if (windRewardedVideoAd != null && windRewardedVideoAd.isReady()) {
             windRewardedVideoAd.show(option);
         }
+    }
+
+    private void loadBaiduRewardVideo(String placementId, String rewardName, int rewardAmount) {
+        Activity activity = getCurrentActivity();
+        if (activity == null) {
+            return;
+        }
+
+        mBaiduRewardVideoAd = new RewardVideoAd(activity, placementId, new RewardVideoAd.RewardVideoAdListener() {
+            @Override
+            public void onVideoDownloadSuccess() {
+                // 视频缓存成功
+                // 建议：可以在收到该回调后，再调用show展示激励视频
+                Log.i(TAG, "Baidu onVideoDownloadSuccess,isReady=" + mBaiduRewardVideoAd.isReady());
+                AdHelper.sendEvent("RewardDidLoad", null);
+                if (isLoadAnShowReward) {
+                    showBaiduRewardVideo(rewardName, rewardAmount);
+                }
+            }
+
+            @Override
+            public void onVideoDownloadFailed() {
+                // 视频缓存失败，可以在这儿重新load下一条广告，最好限制load次数（4-5次即可）。
+                Log.i(TAG, "onVideoDownloadFailed");
+            }
+
+            @Override
+            public void playCompletion() {
+                Log.i(TAG, "playCompletion");
+            }
+
+            @Override
+            public void onRewardVerify(boolean rewardVerify) {
+                // 激励视频奖励回调
+                Log.i(TAG, "onRewardVerify: " + rewardVerify);
+                isRewardSuccess = true;
+            }
+
+            @Override
+            public void onAdSkip(float playScale) {
+                // 用户点击跳过, 展示尾帧
+                Log.i(TAG, "onSkip: " + playScale);
+            }
+
+            @Override
+            public void onAdLoaded() {
+
+                // 请求成功回调
+                Log.i(TAG, "onAdLoaded");
+            }
+
+            @Override
+            public void onAdShow() {
+                // 视频开始播放时候的回调
+                Log.i(TAG, "onAdShow");
+            }
+
+            @Override
+            public void onAdClick() {
+                // 广告被点击的回调
+                Log.i(TAG, "onAdClick");
+            }
+
+            @Override
+            public void onAdClose(float playScale) {
+                // 用户关闭了广告，直到开始下一次load前，将不会再收到任何回调
+                // 说明：关闭按钮在mssp上可以动态配置，媒体通过mssp配置，可以选择广告一开始就展示关闭按钮，还是播放结束展示关闭按钮
+                // 建议：收到该回调之后，可以重新load下一条广告,最好限制load次数（4-5次即可）
+                // playScale[0.0-1.0],1.0表示播放完成，媒体可以按照自己的设计给予奖励
+                Log.i(TAG, "onAdClose" + playScale);
+                WritableMap params = Arguments.createMap();
+                params.putBoolean("isEnded", isRewardSuccess);
+                AdHelper.sendEvent("RewardDidClose", params);
+            }
+
+            @Override
+            public void onAdFailed(String arg0) {
+                // 广告失败回调，直到开始下一次load前，将不会再收到任何回调
+                // 失败可能原因：广告内容填充为空；网络原因请求广告超时等
+                // 建议：收到该回调之后，可以重新load下一条广告，最好限制load次数（4-5次即可）
+                Log.i(TAG, "onAdFailed" + arg0);
+                AdHelper.sendEvent("RewardDidFailed", null);
+            }
+        });
+        // 【可选】【Bidding】设置广告的底价，单位：分
+        // mBaiduRewardVideoAd.setBidFloor(100);
+        // 自定义传参
+        // final RequestParameters requestParameters = new RequestParameters.Builder()
+        // /**
+        // * 【激励视频传参】传参功能支持的参数见ArticleInfo类，各个参数字段的描述和取值可以参考如下注释
+        // * 注意：所有参数的总长度(不包含key值)建议控制在150字符内，避免因超长发生截断，影响信息的上报
+        // */
+        // // 通用信息：用户性别，取值：0-unknown，1-male，2-female
+        // .addCustExt(ArticleInfo.USER_SEX, "1")
+        // // 最近阅读：小说、文章的名称
+        // .addCustExt(ArticleInfo.PAGE_TITLE, "测试书名")
+        // // 自定义传参，参考如下接入
+        // .addCustExt("cust_这是Key", "cust_这是Value" + System.currentTimeMillis())
+        // .addCustExt("Key2", "Value2")
+        // .build();
+        // // 若传参，如下设置
+        // mRewardVideoAd.setRequestParameters(requestParameters);
+        // 请求广告，展示前必须调用
+        mBaiduRewardVideoAd.load();
+    }
+
+    private void showBaiduRewardVideo(String rewardName, int rewardAmount) {
+        if (mBaiduRewardVideoAd == null) {
+            return;
+        }
+        // 1. 强烈建议在收到onVideoDownloadSuccess回调、视频物料缓存完成后再展示广告，
+        // 提升激励视频的播放体验，否则有播放卡顿的风险。
+        // 2. 在展示前可以调用isReady接口判断广告是否就绪：
+        // 此接口会判断本地是否存在【未展示 & 未过期 & 已缓存】的广告
+        if (!mBaiduRewardVideoAd.isReady()) {
+            return;
+        }
+        // 是否在跳过按钮后展示弹框 (默认点击跳过不展示弹框) , 可在广告配置页面配置
+        // boolean isShowDialog = AdSettingHelper.getInstance()
+        // .getBooleanFromSetting(AdSettingProperties.REWARD_VIDEO_SHOW_DIALOG, false);
+        // mRewardVideoAd.setShowDialogOnSkip(isShowDialog);
+        // show之前必须调用load请求广告，否则无效
+        mBaiduRewardVideoAd.show();
     }
 
     @Override

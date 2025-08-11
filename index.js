@@ -31,6 +31,10 @@ function showRewardVideo(type, rewardName, rewardAmount) {
   RNAdPoly.showRewardVideo(type, rewardName, rewardAmount);
 }
 
+function loadAndShowRewardVideo(type, placementId, rewardName, rewardAmount) {
+  RNAdPoly.loadAndShowRewardVideo(type, placementId, rewardName, rewardAmount);
+}
+
 module.exports = {
   init,
   requestPermissionIfNecessary,
@@ -38,5 +42,6 @@ module.exports = {
   loadInterAd,
   showInterAd,
   loadRewardVideo,
-  showRewardVideo
+  showRewardVideo,
+  loadAndShowRewardVideo
 };

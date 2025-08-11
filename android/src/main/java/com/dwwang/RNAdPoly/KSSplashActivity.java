@@ -24,6 +24,7 @@ import com.kwad.sdk.api.model.AdExposureFailureCode;
 import com.kwad.sdk.api.model.AdShowAction;
 import com.kwad.sdk.api.model.AdnName;
 import com.kwad.sdk.api.model.AdnType;
+import com.kwad.sdk.api.model.SplashAdExtraData;
 
 public class KSSplashActivity extends Activity {
   private static final String TAG = "splash_test";
@@ -85,9 +86,9 @@ public class KSSplashActivity extends Activity {
       return;
     }
 
-    // SplashAdExtraData extraData = new SplashAdExtraData();
-    // extraData.setDisableShakeStatus(true);
-    // builder.setSplashExtraData(extraData);
+    SplashAdExtraData extraData = new SplashAdExtraData();
+    extraData.setDisableShakeStatus(true);
+    builder.setSplashExtraData(extraData);
 
     KsScene scene = builder.build();
     KsAdSDK.getLoadManager().loadSplashScreenAd(scene, new KsLoadManager.SplashScreenAdListener() {
