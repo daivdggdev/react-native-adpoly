@@ -9,10 +9,10 @@
 #import "RNAdPoly.h"
 #import <AppTrackingTransparency/AppTrackingTransparency.h>
 #import <AdSupport/AdSupport.h>
-#import <GDTSplashAd.h>
-#import <GDTSDKConfig.h>
-#import <GDTUnifiedInterstitialAd.h>
-#import <GDTRewardVideoAd.h>
+#import <GDTMobSDK/GDTSplashAd.h>
+#import <GDTMobSDK/GDTSDKConfig.h>
+#import <GDTMobSDK/GDTUnifiedInterstitialAd.h>
+#import <GDTMobSDK/GDTRewardVideoAd.h>
 
 #import <Masonry/Masonry.h>
 #import <BUAdSDK/BUAdSDK.h>
@@ -342,7 +342,6 @@ RCT_EXPORT_MODULE();
     CGRect frame = [UIScreen mainScreen].bounds;
     self.buSplash = [[BUSplashAd alloc] initWithSlotID:placementId adSize:frame.size];
     self.buSplash.supportCardView = YES;
-    self.buSplash.supportZoomOutView = YES;
     self.buSplash.tolerateTimeout = 3.5;
     self.buSplash.delegate = self;
     [self.buSplash loadAdData];
@@ -380,9 +379,7 @@ RCT_EXPORT_METHOD(init:(NSString*)type
     }
     else if ([type isEqual:@"tt"])
     {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [manager showBuSplash:placementId];
-        });
+        [manager showBuSplash:placementId];
     }
 }
 
@@ -1040,45 +1037,45 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 #pragma mark delegate
 
 - (void)splashAdDidLoad:(BUSplashAd *)splashAd {
-    if (splashAd.zoomOutView) {
-        UIViewController *parentVC = [UIApplication sharedApplication].keyWindow.rootViewController;
-        //Add this view to your container
-        [parentVC.view insertSubview:splashAd.zoomOutView belowSubview:splashAd];
-        splashAd.zoomOutView.rootViewController = parentVC;
-//        splashAd.zoomOutView.delegate = self;
-    }
+//    if (splashAd.zoomOutView) {
+//        UIViewController *parentVC = [UIApplication sharedApplication].keyWindow.rootViewController;
+//        //Add this view to your container
+//        [parentVC.view insertSubview:splashAd.zoomOutView belowSubview:splashAd];
+//        splashAd.zoomOutView.rootViewController = parentVC;
+////        splashAd.zoomOutView.delegate = self;
+//    }
 }
 
 - (void)splashAdDidClose:(BUSplashAd *)splashAd {
-    if (splashAd.zoomOutView) {
-//        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
-//            [splashAd removeFromSuperview];
-//        }];
-    } else{
-        // Be careful not to say 'self.splashadview = nil' here.
-        // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
-//        [splashAd removeFromSuperview];
-    }
+//    if (splashAd.zoomOutView) {
+////        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
+////            [splashAd removeFromSuperview];
+////        }];
+//    } else{
+//        // Be careful not to say 'self.splashadview = nil' here.
+//        // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
+////        [splashAd removeFromSuperview];
+//    }
 }
 
 - (void)splashAdDidClick:(BUSplashAd *)splashAd {
-    if (splashAd.zoomOutView) {
-        [splashAd.zoomOutView removeFromSuperview];
-    }
+//    if (splashAd.zoomOutView) {
+//        [splashAd.zoomOutView removeFromSuperview];
+//    }
     // Be careful not to say 'self.splashadview = nil' here.
     // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
 //    [splashAd removeFromSuperview];
 }
 
 - (void)splashAdDidClickSkip:(BUSplashAd *)splashAd {
-    if (splashAd.zoomOutView) {
-//        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
-//            [self removeSplashAdView];
-//        }];
-    } else{
-        // Click Skip, there is no subsequent operation, completely remove 'splashAdView', avoid memory leak
-        [self removeSplashAdView];
-    }
+//    if (splashAd.zoomOutView) {
+////        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
+////            [self removeSplashAdView];
+////        }];
+//    } else{
+//        // Click Skip, there is no subsequent operation, completely remove 'splashAdView', avoid memory leak
+//        [self removeSplashAdView];
+//    }
 }
 
 - (void)splashAd:(BUSplashAd *)splashAd didFailWithError:(NSError *)error {
@@ -1100,29 +1097,29 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)splashAdCountdownToZero:(BUSplashAd *)splashAd {
     // When the countdown is over, it is equivalent to clicking Skip to completely remove 'splashAdView' and avoid memory leak
-    if (!splashAd.zoomOutView) {    
-        [self removeSplashAdView];
-    }
+//    if (!splashAd.zoomOutView) {    
+//        [self removeSplashAdView];
+//    }
 }
 
-#pragma mark - BUSplashZoomOutViewDelegate
-- (void)splashZoomOutViewAdDidClick:(BUSplashZoomOutView *)splashAd {
-}
-
-- (void)splashZoomOutViewAdDidClose:(BUSplashZoomOutView *)splashAd {
-    // Click close, completely remove 'splashAdView', avoid memory leak
-    [self removeSplashAdView];
-}
-
-- (void)splashZoomOutViewAdDidAutoDimiss:(BUSplashZoomOutView *)splashAd {
-    // Back down at the end of the countdown to completely remove the 'splashAdView' to avoid memory leaks
-    [self removeSplashAdView];
-}
-
-- (void)splashZoomOutViewAdDidCloseOtherController:(BUSplashZoomOutView *)splashAd interactionType:(BUInteractionType)interactionType {
-    // No further action after closing the other Controllers, completely remove the 'splashAdView' and avoid memory leaks
-    [self removeSplashAdView];
-}
+//#pragma mark - BUSplashZoomOutViewDelegate
+//- (void)splashZoomOutViewAdDidClick:(BUSplashZoomOutView *)splashAd {
+//}
+//
+//- (void)splashZoomOutViewAdDidClose:(BUSplashZoomOutView *)splashAd {
+//    // Click close, completely remove 'splashAdView', avoid memory leak
+//    [self removeSplashAdView];
+//}
+//
+//- (void)splashZoomOutViewAdDidAutoDimiss:(BUSplashZoomOutView *)splashAd {
+//    // Back down at the end of the countdown to completely remove the 'splashAdView' to avoid memory leaks
+//    [self removeSplashAdView];
+//}
+//
+//- (void)splashZoomOutViewAdDidCloseOtherController:(BUSplashZoomOutView *)splashAd interactionType:(BUInteractionType)interactionType {
+//    // No further action after closing the other Controllers, completely remove the 'splashAdView' and avoid memory leaks
+//    [self removeSplashAdView];
+//}
 
 
 
