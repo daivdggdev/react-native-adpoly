@@ -18,4 +18,6 @@ Pod::Spec.new do |s|
   s.dependency 'GDTMobSDK'
   s.dependency 'Ads-CN'
   s.dependency 'KSAdSDK'
+  s.dependency 'SigmobAd-iOS'
+  s.dependency 'BaiduMobAdSDK'
 end

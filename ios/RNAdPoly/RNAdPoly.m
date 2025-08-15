@@ -23,6 +23,15 @@
 
 #import <KSAdSDK/KSAdSDK.h>
 
+#import <WindSDK/WindSDK.h>
+
+#import <BaiduMobAdSDK/BaiduMobAdExpressInterstitial.h>
+#import <BaiduMobAdSDK/BaiduMobAdExpressIntDelegate.h>
+#import <BaiduMobAdSDK/BaiduMobAdRewardVideo.h>
+#import <BaiduMobAdSDK/BaiduMobAdSetting.h>
+#import <BaiduMobAdSDK/BaiduMobAdSplash.h>
+#import <BaiduMobAdSDK/BaiduMobAdManager.h>
+
 static RNAdPoly *_instance = nil;
 
 typedef NS_ENUM(NSInteger, AdSplashType)
@@ -31,7 +40,7 @@ typedef NS_ENUM(NSInteger, AdSplashType)
     AdSplashType_BAIDU,
 };
 
-@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate, GDTUnifiedInterstitialAdDelegate, GDTRewardedVideoAdDelegate, BUNativeExpressFullscreenVideoAdDelegate, BUNativeExpressRewardedVideoAdDelegate, KSInterstitialAdDelegate, KSRewardedVideoAdDelegate>
+@interface RNAdPoly ()<GDTSplashAdDelegate, BUSplashAdDelegate, GDTUnifiedInterstitialAdDelegate, GDTRewardedVideoAdDelegate, BUNativeExpressFullscreenVideoAdDelegate, BUNativeExpressRewardedVideoAdDelegate, KSInterstitialAdDelegate, KSRewardedVideoAdDelegate, WindNewIntersititialAdDelegate, WindRewardVideoAdDelegate, BaiduMobAdExpressIntDelegate, BaiduMobAdRewardVideoDelegate>
 @property (nonatomic, strong) GDTSplashAd *gdtSplash;
 //@property (nonatomic, strong) UIView *customSplashView;
 @property (nonatomic, strong) UIView *bottomView;
@@ -41,12 +50,22 @@ typedef NS_ENUM(NSInteger, AdSplashType)
 @property (nonatomic, assign) BOOL sInitGDT;
 @property (nonatomic, assign) BOOL sInitBU;
 @property (nonatomic, assign) BOOL sInitKS;
+@property (nonatomic, assign) BOOL sInitSigmob;
+@property (nonatomic, assign) BOOL sInitBaidu;
+@property (nonatomic, assign) BOOL isRewardSuccess;
+@property (nonatomic, assign) BOOL isLoadAnShowReward;
 
 @property (nonatomic, strong) GDTUnifiedInterstitialAd *gdtInterstitial;
 @property (nonatomic, strong) GDTRewardVideoAd *gdtRewardVideoAd;
 
 @property (nonatomic, strong) KSInterstitialAd *ksInterstitial;
 @property (nonatomic, strong) KSRewardedVideoAd *ksRewardVideoAd;
+
+@property (nonatomic, strong) WindNewIntersititialAd *sigmobIntersititialAd;
+@property (nonatomic, strong) WindRewardVideoAd *sigmobRewardVideoAd;
+
+@property (nonatomic, strong) BaiduMobAdExpressInterstitial *baiduInterstitialAd;
+@property (nonatomic, strong) BaiduMobAdRewardVideo *baiduRewardVideoAd;
 
 //@property (nonatomic, strong) IMNative* nativeAd;
 //@property (nonatomic, strong) NSString* nativeContent;
@@ -99,12 +118,36 @@ RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"ShowSplashFailed", @"RewardDidSucceed", @"RewardDidClose", @"FullVideoAdDidSucceed", @"FullVideoAdDidFailed", @"FullVideoAdDidClose"];
+    return @[@"AdInitSuccess",
+             @"ShowSplashFailed",
+             @"RewardDidLoad",
+             @"RewardDidSucceed",
+             @"RewardDidClose",
+             @"FullVideoAdDidSucceed",
+             @"FullVideoAdDidFailed",
+             @"FullVideoAdDidClose"];
+}
+
+- (UIWindow*)getKeyWindow
+{
+    UIWindow *keyWindow = nil;
+    for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if (scene.activationState == UISceneActivationStateForegroundActive) {
+            for (UIWindow *window in scene.windows) {
+                if (window.isKeyWindow) {
+                    keyWindow = window;
+                    break;
+                }
+            }
+        }
+        if (keyWindow) break;
+    }
+    return keyWindow;
 }
 
 - (void)drawBottomView
 {
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    UIWindow *window = [self getKeyWindow];
     CGFloat screenWidth = window.frame.size.width;
     CGFloat screenHeight = window.frame.size.height;
     
@@ -154,23 +197,27 @@ RCT_EXPORT_MODULE();
     }];
 }
 
-- (void)setupGDTAdSDK:(NSString*)appKey
+- (void)setupGDTAdSDK:(NSString*)appId
+               appKey:(NSString*)appKey
 {
 //    NSLog(@"setupGDTAdSDK sInitGDT: %@", self.sInitGDT);
     if (self.sInitGDT) {
         return;
     }
 
-    BOOL result = [GDTSDKConfig initWithAppId:appKey];
+    BOOL result = [GDTSDKConfig initWithAppId:appId];
     if (result) {
         NSLog(@"初始化成功");
     }
     [GDTSDKConfig startWithCompletionHandler:^(BOOL success, NSError *error) {
         self.sInitGDT = success;
+        [self sendEventWithName:@"AdInitSuccess" body:@{@"type": @"gdt"}];
     }];
 }
 
-- (void)setupBUAdSDK:(NSString*)appKey handler:(BUCompletionHandler)completionHandler
+- (void)setupBUAdSDK:(NSString*)appId
+              appKey:(NSString*)appKey
+             handler:(BUCompletionHandler)completionHandler
 {
 //    NSLog(@"setupBUAdSDK sInitBU: %@", self.sInitBU);
     if (self.sInitBU && completionHandler != nil) {
@@ -179,15 +226,17 @@ RCT_EXPORT_MODULE();
     }
     
     BUAdSDKConfiguration *configuration = [BUAdSDKConfiguration configuration];
-    configuration.appID = appKey;
+    configuration.appID = appId;
 //    configuration.privacyProvider = [[BUDPrivacyProvider alloc] init];
     configuration.appLogoImage = [UIImage imageNamed:@"AppIcon"];
     [BUAdSDKManager startWithAsyncCompletionHandler:^(BOOL success, NSError *error) {
         self.sInitBU = success;
+        [self sendEventWithName:@"AdInitSuccess" body:@{@"type": @"tt"}];
     }];    
 }
 
-- (void)setupKSAdSDK:(NSString*)appKey
+- (void)setupKSAdSDK:(NSString*)appId
+              appKey:(NSString*)appKey
 {
 //    NSLog(@"setupGDTAdSDK sInitGDT: %@", self.sInitGDT);
     if (self.sInitKS) {
@@ -195,11 +244,44 @@ RCT_EXPORT_MODULE();
     }
 
     KSAdSDKConfiguration *configuration = [KSAdSDKConfiguration configuration];
-    configuration.appId = appKey;
+    configuration.appId = appId;
 
     // 启动SDK：SDK启动成功后，才可以继续进行后续的广告请求操作（异步）
     [KSAdSDKManager startWithCompletionHandler:^(BOOL success, NSError *error) {
         self.sInitKS = success;
+        [self sendEventWithName:@"AdInitSuccess" body:@{@"type": @"ks"}];
+    }];
+}
+
+- (void)setupSigmobAdSDK:(NSString*)appId
+                  appKey:(NSString*)appKey
+{
+//    NSLog(@"setupGDTAdSDK sInitGDT: %@", self.sInitGDT);
+    if (self.sInitSigmob) {
+        return;
+    }
+
+    WindAdOptions *option = [[WindAdOptions alloc] initWithAppId:appId appKey:appKey];
+    [WindAds startWithOptions:option];
+    self.sInitSigmob = YES;
+    [self sendEventWithName:@"AdInitSuccess" body:@{@"type": @"sigmob"}];
+}
+
+- (void)setupBaiduAdSDK:(NSString*)appId
+                 appKey:(NSString*)appKey
+{
+//    NSLog(@"setupGDTAdSDK sInitGDT: %@", self.sInitGDT);
+    if (self.sInitBaidu) {
+        return;
+    }
+
+    [BaiduMobAdManager setAppsid:appId];
+    [BaiduMobAdManager startWithCompletionHandler:^(BOOL success, NSError * _Nullable error) {
+        // 初始化成功
+        if (success) {
+            self.sInitBaidu = YES;
+            [self sendEventWithName:@"AdInitSuccess" body:@{@"type": @"baidu"}];
+        }
     }];
 }
 
@@ -216,7 +298,7 @@ RCT_EXPORT_MODULE();
 - (void)showGDTFullscreenVideoAd
 {
     if ([self.gdtInterstitial isAdValid]) {
-        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *rootViewController = [self getKeyWindow].rootViewController;
         [self.gdtInterstitial presentAdFromRootViewController:rootViewController];
     }
 }
@@ -231,7 +313,7 @@ RCT_EXPORT_MODULE();
 - (void)showBUFullscreenVideoAd
 {
     if (self.fullscreenAd) {
-        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *rootViewController = [self getKeyWindow].rootViewController;
         [self.fullscreenAd showAdFromRootViewController:rootViewController];
     }
 }
@@ -250,9 +332,56 @@ RCT_EXPORT_MODULE();
 - (void)showKSFullscreenVideoAd
 {
     if (self.ksInterstitial) {
-        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *rootViewController = [self getKeyWindow].rootViewController;
         [self.ksInterstitial showFromViewController:rootViewController];
     }
+}
+
+- (void)loadSigmobFullscreenVideoAd:(NSString*)placementId
+{
+    WindAdRequest *request = [WindAdRequest request];
+//    request.userId = @"your user id";
+    request.placementId = placementId;
+//    request.options = @{@"test_key":@"test_value"};
+    if (!self.sigmobIntersititialAd) {
+        self.sigmobIntersititialAd = [[WindNewIntersititialAd alloc] initWithRequest:request];
+    }
+    self.sigmobIntersititialAd.delegate = self;
+    [self.sigmobIntersititialAd loadAdData];
+}
+
+- (void)showSigmobFullscreenVideoAd
+{
+    if (!self.sigmobIntersititialAd.isAdReady) {
+        return;
+    }
+    //当多场景使用同一个广告位是，可以通过WindMillAdSceneId来区分某个场景的广告播放数据
+    //不需要统计可以设置为options=nil
+    UIViewController *rootViewController = [self getKeyWindow].rootViewController;
+    [self.sigmobIntersititialAd showAdFromRootViewController:rootViewController options:nil];
+}
+
+- (void)loadBaiduFullscreenVideoAd:(NSString*)placementId
+{
+    BaiduMobAdFeedRequestParameters *parameters = [[BaiduMobAdFeedRequestParameters alloc] init];
+//    [parameters addCustExtParametersKey:@"baidu1" value:@"bd1234"];
+//    NSTimeInterval date = [[NSDate date] timeIntervalSince1970];
+//    NSString *md5String = [NSString stringWithFormat:@"cust_Value_这是时间戳 %f",date];
+//    [parameters addCustExtParametersKey:@"cust_Key_这是key" value:md5String];
+    self.baiduInterstitialAd.requestParameters = parameters;
+    
+    [self.baiduInterstitialAd load];
+}
+
+- (void)showBaiduFullscreenVideoAd
+{
+    if (![self.baiduInterstitialAd isReady]) {
+        return;
+    }
+    //当多场景使用同一个广告位是，可以通过WindMillAdSceneId来区分某个场景的广告播放数据
+    //不需要统计可以设置为options=nil
+    UIViewController *rootViewController = [self getKeyWindow].rootViewController;
+    [self.baiduInterstitialAd showFromViewController:rootViewController];
 }
 
 - (void)loadGDTRewardVideoAd:(NSString*)placementId 
@@ -267,7 +396,7 @@ RCT_EXPORT_MODULE();
 - (void)showGDTRewardVideoAd
 {
     if (self.gdtRewardVideoAd.isAdValid) {
-        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *rootViewController = [self getKeyWindow].rootViewController;
         [self.gdtRewardVideoAd showAdFromRootViewController:rootViewController];
     }
 }
@@ -287,7 +416,7 @@ RCT_EXPORT_MODULE();
 - (void)showBURewardVideoAd
 {
     if (self.rewardedAd) {
-        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *rootViewController = [self getKeyWindow].rootViewController;
         [self.rewardedAd showAdFromRootViewController:rootViewController];
     }
 }
@@ -311,14 +440,61 @@ RCT_EXPORT_MODULE();
 - (void)showKSRewardVideoAd
 {
     if (self.ksRewardVideoAd.isValid) {
-        UIViewController *rootViewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+        UIViewController *rootViewController = [self getKeyWindow].rootViewController;
         [self.ksRewardVideoAd showAdFromRootViewController:rootViewController];
+    }
+}
+
+- (void)loadSigmobRewardVideoAd:(NSString*)placementId
+                  rewardName:(NSString*)rewardName
+                rewardAmount:(NSInteger)rewardAmount
+{
+    WindAdRequest *request = [WindAdRequest request];
+//    request.userId = @"your user id";
+    request.placementId = placementId;
+//    request.options = @{@"test_key":@"test_value"};
+    if (!self.sigmobRewardVideoAd) {
+        self.sigmobRewardVideoAd = [[WindRewardVideoAd alloc] initWithRequest:request];
+    }
+    self.sigmobRewardVideoAd.delegate = self;
+    [self.sigmobRewardVideoAd loadAdData];
+}
+
+- (void)showSigmobRewardVideoAd
+{
+    if (!self.sigmobRewardVideoAd.isAdReady) {
+        return;
+    }
+    //当多场景使用同一个广告位是，可以通过WindAdSceneId来区分某个场景的广告播放数据
+    //不需要统计可以设置为options=nil
+    UIViewController *rootViewController = [self getKeyWindow].rootViewController;
+    [self.sigmobRewardVideoAd showAdFromRootViewController:rootViewController options:nil];
+}
+
+- (void)loadBaiduRewardVideoAd:(NSString*)placementId
+                    rewardName:(NSString*)rewardName
+                  rewardAmount:(NSInteger)rewardAmount
+{
+    BaiduMobAdFeedRequestParameters *parameters = [[BaiduMobAdFeedRequestParameters alloc] init];
+//    [parameters addCustExtParametersKey:@"baidu1" value:@"bd1234"];
+//    NSTimeInterval date = [[NSDate date] timeIntervalSince1970];
+//    NSString *md5String = [NSString stringWithFormat:@"cust_Value_这是时间戳 %f",date];
+//    [parameters addCustExtParametersKey:@"cust_Key_这是key" value:md5String];
+    self.baiduRewardVideoAd.requestParameters = parameters;
+    [self.baiduRewardVideoAd load];
+}
+
+- (void)showBaiduRewardVideoAd
+{
+    if (self.baiduRewardVideoAd.isReady) {
+        UIViewController *rootViewController = [self getKeyWindow].rootViewController;
+        [self.baiduRewardVideoAd showFromViewController:rootViewController];
     }
 }
 
 - (void)showGdtSplash:(NSString*)placementId
 {
-    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    UIWindow *window = [self getKeyWindow];
     
     //开屏广告初始化并展示代码
     self.gdtSplash = [[GDTSplashAd alloc] initWithPlacementId:placementId];
@@ -340,10 +516,14 @@ RCT_EXPORT_MODULE();
 - (void)showBuSplash:(NSString*)placementId;
 {
     CGRect frame = [UIScreen mainScreen].bounds;
-    self.buSplash = [[BUSplashAd alloc] initWithSlotID:placementId adSize:frame.size];
-    self.buSplash.supportCardView = YES;
-    self.buSplash.tolerateTimeout = 3.5;
+    CGRect splashFrame = CGRectMake(0, 0, frame.size.width, frame.size.height - 120);
+      
+    self.buSplash = [[BUSplashAd alloc] initWithSlotID:placementId adSize:splashFrame.size];
+      // 不支持中途更改代理，中途更改代理会导致接收不到广告相关回调，如若存在中途更改代理场景，需自行处理相关逻辑，确保广告相关回调正常执行。
     self.buSplash.delegate = self;
+//    self.buSplash.cardDelegate = self;
+    self.buSplash.supportCardView = YES;
+    self.buSplash.tolerateTimeout = 3;
     [self.buSplash loadAdData];
 }
 
@@ -352,20 +532,36 @@ RCT_EXPORT_METHOD(init:(NSString*)type
                   appKey:(NSString*)appKey
                   requestPermission:(BOOL)requestPermission)
 {
-    NSLog(@"init type: %@, appId: %@, appKey: %@", type, appId, appKey);
-    RNAdPoly *manager = [RNAdPoly sharedInstance];
-    if ([type isEqual:@"gdt"])
-    {
-        [manager setupGDTAdSDK:appId];
-    }
-    else if ([type isEqual:@"tt"])
-    {
-        [manager setupBUAdSDK:appId handler:nil];
-    }
-    else if ([type isEqual:@"ks"])
-    {
-        [manager setupKSAdSDK:appId];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"init type: %@, appId: %@, appKey: %@", type, appId, appKey);
+        RNAdPoly *manager = [RNAdPoly sharedInstance];
+        if ([type isEqual:@"gdt"])
+        {
+            [manager setupGDTAdSDK:appId
+                            appKey:appKey];
+        }
+        else if ([type isEqual:@"tt"])
+        {
+            [manager setupBUAdSDK:appId
+                           appKey:appKey
+                          handler:nil];
+        }
+        else if ([type isEqual:@"ks"])
+        {
+            [manager setupKSAdSDK:appId
+                           appKey:appKey];
+        }
+        else if ([type isEqual:@"sigmob"])
+        {
+            [manager setupSigmobAdSDK:appId
+                               appKey:appKey];
+        }
+        else if ([type isEqual:@"baidu"])
+        {
+            [manager setupBaiduAdSDK:appId
+                              appKey:appKey];
+        }
+    });
 }
 
 
@@ -409,43 +605,57 @@ RCT_EXPORT_METHOD(loadInterAd:(NSString*)type
                   placementId:(NSString*)placementId)
 {
     NSLog(@"loadInterAd type: %@, placementId: %@", type, placementId);
-    RNAdPoly *manager = [RNAdPoly sharedInstance];
-    if ([type isEqual:@"gdt"])
-    {
-        [manager loadGDTFullscreenVideoAd:placementId];
-    }
-    else if ([type isEqual:@"tt"])
-    {
-        [manager loadBUFullscreenVideoAd:placementId];
-    }
-    else if ([type isEqual:@"ks"])
-    {
-        [manager loadKSFullscreenVideoAd:placementId];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        RNAdPoly *manager = [RNAdPoly sharedInstance];
+        if ([type isEqual:@"gdt"])
+        {
+            [manager loadGDTFullscreenVideoAd:placementId];
+        }
+        else if ([type isEqual:@"tt"])
+        {
+            [manager loadBUFullscreenVideoAd:placementId];
+        }
+        else if ([type isEqual:@"ks"])
+        {
+            [manager loadKSFullscreenVideoAd:placementId];
+        }
+        else if ([type isEqual:@"sigmob"])
+        {
+            [manager loadSigmobFullscreenVideoAd:placementId];
+        }
+        else if ([type isEqual:@"baidu"])
+        {
+            [manager loadBaiduFullscreenVideoAd:placementId];
+        }
+    });
 }
 
 RCT_EXPORT_METHOD(showInterAd:(NSString*)type)
 {
     NSLog(@"showFullScreenVideo type: %@", type);
-    RNAdPoly *manager = [RNAdPoly sharedInstance];
-    if ([type isEqual:@"gdt"])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        RNAdPoly *manager = [RNAdPoly sharedInstance];
+        if ([type isEqual:@"gdt"])
+        {
             [manager showGDTFullscreenVideoAd];
-        });
-    }
-    else if ([type isEqual:@"tt"])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        }
+        else if ([type isEqual:@"tt"])
+        {
             [manager showBUFullscreenVideoAd];
-        });
-    }
-    else if ([type isEqual:@"ks"])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        }
+        else if ([type isEqual:@"ks"])
+        {
             [manager showKSFullscreenVideoAd];
-        });
-    }
+        }
+        else if ([type isEqual:@"sigmob"])
+        {
+            [manager showSigmobFullscreenVideoAd];
+        }
+        else if ([type isEqual:@"baidu"])
+        {
+            [manager showBaiduFullscreenVideoAd];
+        }
+    });
 }
 
 RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
@@ -454,19 +664,42 @@ RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
                rewardAmount:(NSInteger)rewardAmount)
 {
     NSLog(@"loadRewardVideo type: %@, placementId: %@", type, placementId);
-    RNAdPoly *manager = [RNAdPoly sharedInstance];
-    if ([type isEqual:@"gdt"])
-    {
-        [manager loadGDTRewardVideoAd:placementId 
-                           rewardName:rewardName
-                         rewardAmount:rewardAmount];
-    }
-    else if ([type isEqual:@"tt"])
-    {
-        [manager loadBURewardVideoAd:placementId 
-                          rewardName:rewardName
-                        rewardAmount:rewardAmount];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.isRewardSuccess = false;
+        self.isLoadAnShowReward = false;
+      
+        RNAdPoly *manager = [RNAdPoly sharedInstance];
+        if ([type isEqual:@"gdt"])
+        {
+            [manager loadGDTRewardVideoAd:placementId
+                               rewardName:rewardName
+                             rewardAmount:rewardAmount];
+        }
+        else if ([type isEqual:@"tt"])
+        {
+            [manager loadBURewardVideoAd:placementId
+                              rewardName:rewardName
+                            rewardAmount:rewardAmount];
+        }
+        else if ([type isEqual:@"ks"])
+        {
+            [manager loadKSRewardVideoAd:placementId
+                              rewardName:rewardName
+                            rewardAmount:rewardAmount];
+        }
+        else if ([type isEqual:@"sigmob"])
+        {
+            [manager loadSigmobRewardVideoAd:placementId
+                                  rewardName:rewardName
+                                rewardAmount:rewardAmount];
+        }
+        else if ([type isEqual:@"baidu"])
+        {
+            [manager loadBaiduRewardVideoAd:placementId
+                                 rewardName:rewardName
+                               rewardAmount:rewardAmount];
+        }
+    });
 }
 
 RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
@@ -475,19 +708,29 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
                rewardAmount:(NSInteger)rewardAmount)
 {
     NSLog(@"showRewardVideo type: %@", type);
-    RNAdPoly *manager = [RNAdPoly sharedInstance];
-    if ([type isEqual:@"gdt"])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        RNAdPoly *manager = [RNAdPoly sharedInstance];
+        if ([type isEqual:@"gdt"])
+        {
             [manager showGDTRewardVideoAd];
-        });
-    }
-    else if ([type isEqual:@"tt"])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        }
+        else if ([type isEqual:@"tt"])
+        {
             [manager showBURewardVideoAd];
-        });
-    }
+        }
+        else if ([type isEqual:@"ks"])
+        {
+            [manager showKSRewardVideoAd];
+        }
+        else if ([type isEqual:@"sigmob"])
+        {
+            [manager showSigmobRewardVideoAd];
+        }
+        else if ([type isEqual:@"baidu"])
+        {
+            [manager showBaiduRewardVideoAd];
+        }
+    });
 }
 
 #pragma mark Gdt Splash Delegate
@@ -710,7 +953,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 {
     NSLog(@"%s",__FUNCTION__);
     NSLog(@"广告已关闭");
-    [self sendEventWithName:@"RewardDidClose" body:nil];
+    [self sendEventWithName:@"RewardDidClose" body:@{@"isEnded": @(self.isRewardSuccess)}];
 }
 
 
@@ -752,7 +995,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 - (void)gdt_rewardVideoAdDidRewardEffective:(GDTRewardVideoAd *)rewardedVideoAd info:(NSDictionary *)info {
     NSLog(@"%s",__FUNCTION__);
     NSLog(@"播放达到激励条件 transid:%@", [info objectForKey:@"GDT_TRANS_ID"]);
-    [self sendEventWithName:@"RewardDidSucceed" body:nil];
+    self.isRewardSuccess = YES;
 }
 
 - (void)gdt_rewardVideoAdDidPlayFinish:(GDTRewardVideoAd *)rewardedVideoAd
@@ -765,7 +1008,62 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     // }
 }
 
+#pragma mark BUNative Splash delegate
+
+- (void)splashAdLoadSuccess:(nonnull BUSplashAd *)splashAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+    // 使用应用keyWindow的rootViewController（接入简单，推荐）
+    UIViewController *rootViewController = [self getKeyWindow].rootViewController;
+    [splashAd showSplashViewInRootViewController:rootViewController];
+    
+}
+
+- (void)splashAdLoadFail:(nonnull BUSplashAd *)splashAd error:(BUAdError * _Nullable)error {
+    NSString *errorMsg = error ? [NSString stringWithFormat:@"code=%ld, message=%@", (long)error.code, error.localizedDescription] : @"error is nil";
+    [self pbud_logWithSEL:_cmd msg:errorMsg];
+    [self sendEventWithName:@"ShowSplashFailed" body:nil];
+}
+
+- (void)splashAdRenderSuccess:(nonnull BUSplashAd *)splashAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+    [splashAd.splashRootViewController.view addSubview:self.bottomView];
+}
+
+- (void)splashAdRenderFail:(nonnull BUSplashAd *)splashAd error:(BUAdError * _Nullable)error {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)splashAdWillShow:(nonnull BUSplashAd *)splashAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)splashAdDidShow:(nonnull BUSplashAd *)splashAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)splashAdDidClick:(nonnull BUSplashAd *)splashAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)splashAdDidClose:(nonnull BUSplashAd *)splashAd closeType:(BUSplashAdCloseType)closeType {
+    [self pbud_logWithSEL:_cmd msg:@""];
+    [self.bottomView removeFromSuperview];
+}
+
+- (void)splashAdViewControllerDidClose:(BUSplashAd *)splashAd {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)splashDidCloseOtherController:(nonnull BUSplashAd *)splashAd interactionType:(BUInteractionType)interactionType {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
+- (void)splashVideoAdDidPlayFinish:(nonnull BUSplashAd *)splashAd didFailWithError:(nullable NSError *)error {
+    [self pbud_logWithSEL:_cmd msg:@""];
+}
+
 #pragma mark - BUNativeExpressFullscreenVideoAdDelegate
+
 - (void)nativeExpressFullscreenVideoAdDidLoad:(BUNativeExpressFullscreenVideoAd *)fullscreenVideoAd {
     [self pbud_logWithSEL:_cmd msg:@""];
     [self sendEventWithName:@"FullVideoAdDidSucceed" body:nil];
@@ -878,7 +1176,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 - (void)nativeExpressRewardedVideoAdDidClose:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
     [self pbud_logWithSEL:_cmd msg:@""];
     self.rewardedAd = nil;
-    [self sendEventWithName:@"RewardDidClose" body:nil];
+    [self sendEventWithName:@"RewardDidClose" body:@{@"isEnded": @(self.isRewardSuccess)}];
 }
 
 - (void)nativeExpressRewardedVideoAdDidClick:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd {
@@ -895,7 +1193,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)nativeExpressRewardedVideoAdServerRewardDidSucceed:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd verify:(BOOL)verify {
     [self pbud_logWithSEL:_cmd msg:[NSString stringWithFormat:@"verify:%@ rewardName:%@ rewardMount:%ld",verify?@"true":@"false",rewardedVideoAd.rewardedVideoModel.rewardName,(long)rewardedVideoAd.rewardedVideoModel.rewardAmount]];
-    [self sendEventWithName:@"RewardDidSucceed" body:nil];
+    self.isRewardSuccess = YES;
 }
 
 - (void)nativeExpressRewardedVideoAdServerRewardDidFail:(BUNativeExpressRewardedVideoAd *)rewardedVideoAd error:(NSError * _Nullable)error {
@@ -935,6 +1233,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)ksad_interstitialAdDidClose:(KSInterstitialAd *)interstitialAd {
     NSLog(@"%s",__FUNCTION__);
+    [self sendEventWithName:@"FullVideoAdDidClose" body:nil];
 }
 
 - (void)ksad_interstitialAdWillVisible:(KSInterstitialAd *)interstitialAd {
@@ -951,6 +1250,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)ksad_interstitialAdRenderFail:(KSInterstitialAd *)interstitialAd error:(NSError *)error {
     NSLog(@"%s",__FUNCTION__);
+    [self sendEventWithName:@"FullVideoAdDidFailed" body:nil];
 }
 
 - (void)ksad_interstitialAdDidCloseOtherController:(KSInterstitialAd *)interstitialAd interactionType:(KSAdInteractionType)interactionType {
@@ -970,7 +1270,6 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)rewardedVideoAdDidLoad:(KSRewardedVideoAd *)rewardedVideoAd {
     NSLog(@"%s",__FUNCTION__);
-    [self sendEventWithName:@"RewardDidSucceed" body:nil];
 }
 
 - (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd didFailWithError:(NSError *_Nullable)error {
@@ -995,7 +1294,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)rewardedVideoAdDidClose:(KSRewardedVideoAd *)rewardedVideoAd {
     NSLog(@"%s",__FUNCTION__);
-    [self sendEventWithName:@"RewardDidClose" body:nil];
+    [self sendEventWithName:@"RewardDidClose" body:@{@"isEnded": @(self.isRewardSuccess)}];
 }
 
 - (void)rewardedVideoAdDidClick:(KSRewardedVideoAd *)rewardedVideoAd {
@@ -1020,6 +1319,7 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
 
 - (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd hasReward:(BOOL)hasReward {
     NSLog(@"%s",__FUNCTION__);
+    self.isRewardSuccess = hasReward;
 }
 
 - (void)rewardedVideoAd:(KSRewardedVideoAd *)rewardedVideoAd hasReward:(BOOL)hasReward taskType:(KSAdRewardTaskType)taskType currentTaskType:(KSAdRewardTaskType)currentTaskType {
@@ -1034,94 +1334,190 @@ RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
     NSLog(@"%s",__FUNCTION__);
 }
 
-#pragma mark delegate
+#pragma mark - WindIntersititialAdDelegate
 
-- (void)splashAdDidLoad:(BUSplashAd *)splashAd {
-//    if (splashAd.zoomOutView) {
-//        UIViewController *parentVC = [UIApplication sharedApplication].keyWindow.rootViewController;
-//        //Add this view to your container
-//        [parentVC.view insertSubview:splashAd.zoomOutView belowSubview:splashAd];
-//        splashAd.zoomOutView.rootViewController = parentVC;
-////        splashAd.zoomOutView.delegate = self;
-//    }
+- (void)intersititialAdDidLoad:(WindNewIntersititialAd *)intersititialAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
+    [self sendEventWithName:@"FullVideoAdDidSucceed" body:nil];
 }
 
-- (void)splashAdDidClose:(BUSplashAd *)splashAd {
-//    if (splashAd.zoomOutView) {
-////        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
-////            [splashAd removeFromSuperview];
-////        }];
-//    } else{
-//        // Be careful not to say 'self.splashadview = nil' here.
-//        // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
-////        [splashAd removeFromSuperview];
-//    }
+- (void)intersititialAdDidLoad:(WindNewIntersititialAd *)intersititialAd didFailWithError:(NSError *)error {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
+    [self sendEventWithName:@"FullVideoAdDidFailed" body:nil];
 }
 
-- (void)splashAdDidClick:(BUSplashAd *)splashAd {
-//    if (splashAd.zoomOutView) {
-//        [splashAd.zoomOutView removeFromSuperview];
-//    }
-    // Be careful not to say 'self.splashadview = nil' here.
-    // Subsequent agent callbacks will not be triggered after the 'splashAdView' is released early.
-//    [splashAd removeFromSuperview];
+- (void)intersititialAdWillVisible:(WindNewIntersititialAd *)intersititialAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
 }
 
-- (void)splashAdDidClickSkip:(BUSplashAd *)splashAd {
-//    if (splashAd.zoomOutView) {
-////        [[BUDAnimationTool sharedInstance] transitionFromView:splashAd toView:splashAd.zoomOutView splashCompletion:^{
-////            [self removeSplashAdView];
-////        }];
-//    } else{
-//        // Click Skip, there is no subsequent operation, completely remove 'splashAdView', avoid memory leak
-//        [self removeSplashAdView];
-//    }
+- (void)intersititialAdDidVisible:(WindNewIntersititialAd *)intersititialAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
 }
 
-- (void)splashAd:(BUSplashAd *)splashAd didFailWithError:(NSError *)error {
-    [self removeSplashAdView];
-    NSLog(@"%s%@",__FUNCTION__,error);
-    [self sendEventWithName:@"ShowSplashFailed" body:nil];
+- (void)intersititialAdDidClick:(WindNewIntersititialAd *)intersititialAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
 }
 
-- (void)splashAdWillVisible:(BUSplashAd *)splashAd {
+- (void)intersititialAdDidClickSkip:(WindNewIntersititialAd *)intersititialAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
 }
 
-- (void)splashAdWillClose:(BUSplashAd *)splashAd {
+- (void)intersititialAdDidClose:(WindNewIntersititialAd *)intersititialAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
+    [self sendEventWithName:@"FullVideoAdDidClose" body:nil];
 }
 
-- (void)splashAdDidCloseOtherController:(BUSplashAd *)splashAd interactionType:(BUInteractionType)interactionType {
-    // No further action after closing the other Controllers, completely remove the 'splashAdView' and avoid memory leaks
-    [self removeSplashAdView];
+- (void)intersititialAdServerResponse:(WindNewIntersititialAd *)intersititialAd isFillAd:(BOOL)isFillAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), intersititialAd.placementId);
 }
 
-- (void)splashAdCountdownToZero:(BUSplashAd *)splashAd {
-    // When the countdown is over, it is equivalent to clicking Skip to completely remove 'splashAdView' and avoid memory leak
-//    if (!splashAd.zoomOutView) {    
-//        [self removeSplashAdView];
-//    }
+#pragma mark - WindRewardVideoAdDelegate
+
+- (void)rewardVideoAdDidLoad:(WindRewardVideoAd *)rewardVideoAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
 }
 
-//#pragma mark - BUSplashZoomOutViewDelegate
-//- (void)splashZoomOutViewAdDidClick:(BUSplashZoomOutView *)splashAd {
-//}
-//
-//- (void)splashZoomOutViewAdDidClose:(BUSplashZoomOutView *)splashAd {
-//    // Click close, completely remove 'splashAdView', avoid memory leak
-//    [self removeSplashAdView];
-//}
-//
-//- (void)splashZoomOutViewAdDidAutoDimiss:(BUSplashZoomOutView *)splashAd {
-//    // Back down at the end of the countdown to completely remove the 'splashAdView' to avoid memory leaks
-//    [self removeSplashAdView];
-//}
-//
-//- (void)splashZoomOutViewAdDidCloseOtherController:(BUSplashZoomOutView *)splashAd interactionType:(BUInteractionType)interactionType {
-//    // No further action after closing the other Controllers, completely remove the 'splashAdView' and avoid memory leaks
-//    [self removeSplashAdView];
-//}
+- (void)rewardVideoAdDidLoad:(WindRewardVideoAd *)rewardVideoAd didFailWithError:(NSError *)error {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+}
 
+- (void)rewardVideoAdWillVisible:(WindRewardVideoAd *)rewardVideoAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+}
 
+- (void)rewardVideoAdDidVisible:(WindRewardVideoAd *)rewardVideoAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+}
+
+- (void)rewardVideoAdDidClick:(WindRewardVideoAd *)rewardVideoAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+}
+
+- (void)rewardVideoAdDidClickSkip:(WindRewardVideoAd *)rewardVideoAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+}
+
+- (void)rewardVideoAd:(WindRewardVideoAd *)rewardVideoAd reward:(WindRewardInfo *)reward {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+    self.isRewardSuccess = YES;
+}
+
+- (void)rewardVideoAdDidClose:(WindRewardVideoAd *)rewardVideoAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+    [self sendEventWithName:@"RewardDidClose" body:@{@"isEnded": @(self.isRewardSuccess)}];
+}
+
+- (void)rewardVideoAdDidPlayFinish:(WindRewardVideoAd *)rewardVideoAd didFailWithError:(NSError *)error {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+}
+
+/**
+ This method is called when return ads from sigmob ad server.
+ */
+- (void)rewardVideoAdServerResponse:(WindRewardVideoAd *)rewardVideoAd isFillAd:(BOOL)isFillAd {
+    NSLog(@"%@ -- %@", NSStringFromSelector(_cmd), rewardVideoAd.placementId);
+}
+
+#pragma mark - BaiduIntersititialAdDelegate
+
+- (void)interstitialAdLoaded:(BaiduMobAdExpressInterstitial *)interstitial {
+    NSLog(@"ExpressInterstitial loaded 请求成功");
+    NSLog(@"插屏价格标签: %@", [interstitial getECPMLevel]);
+    [self sendEventWithName:@"FullVideoAdDidSucceed" body:nil];
+}
+
+- (void)interstitialAdLoadFailed:(BaiduMobAdExpressInterstitial *)interstitial withError:(BaiduMobFailReason)reason {
+    NSLog(@"ExpressInterstitial failed 请求失败");
+    [self sendEventWithName:@"FullVideoAdDidFailed" body:nil];
+}
+
+- (void)interstitialAdDownloadSucceeded:(BaiduMobAdExpressInterstitial *)interstitial {
+    NSLog(@"ExpressInterstitial downloadSucceeded 缓存成功");
+}
+
+- (void)interstitialAdDownLoadFailed:(BaiduMobAdExpressInterstitial *)interstitial {
+    NSLog(@"ExpressInterstitial downloadFailed 缓存失败");
+}
+
+- (void)interstitialAdExposure:(BaiduMobAdExpressInterstitial *)interstitial {
+    NSLog(@"ExpressInterstitial exposure 曝光成功");
+}
+
+- (void)interstitialAdExposureFail:(BaiduMobAdExpressInterstitial *)interstitial withError:(int)reason {
+    NSLog(@"ExpressInterstitial exposure 展现失败");
+}
+
+- (void)interstitialAdDidClick:(BaiduMobAdExpressInterstitial *)interstitial {
+    NSLog(@"ExpressInterstitial click 发生点击");
+}
+
+- (void)interstitialAdDidLPClose:(BaiduMobAdExpressInterstitial *)interstitial {
+    NSLog(@"ExpressInterstitial lpClose 落地页关闭");
+}
+
+- (void)interstitialAdDidClose:(BaiduMobAdExpressInterstitial *)interstitial {
+    NSLog(@"ExpressInterstitial close 点击关闭");
+    [self sendEventWithName:@"FullVideoAdDidClose" body:nil];
+}
+
+#pragma mark - BaiduRewardVideoAdDelegate
+
+- (void)rewardedVideoAdLoaded:(BaiduMobAdRewardVideo *)video {
+    NSLog(@"激励视频缓存成功");
+}
+
+- (void)rewardedVideoAdLoadFailed:(BaiduMobAdRewardVideo *)video withError:(BaiduMobFailReason)reason {
+    NSLog(@"激励视频缓存失败，failReason：%d", reason);
+}
+
+- (void)rewardedVideoAdShowFailed:(BaiduMobAdRewardVideo *)video withError:(BaiduMobFailReason)reason {
+    NSLog(@"激励视频展现失败，failReason：%d", reason);
+    //异常情况处理
+}
+
+- (void)rewardedVideoAdDidExposured:(BaiduMobAdRewardVideo *)video {
+    NSLog(@"激励视频曝光成功");
+}
+
+- (void)rewardedVideoAdDidStarted:(BaiduMobAdRewardVideo *)video {
+    NSLog(@"激励视频开始播放");
+}
+
+- (void)rewardedVideoAdDidPlayFinish:(BaiduMobAdRewardVideo *)video {
+    
+    NSLog(@"激励视频完成播放");
+}
+
+- (void)rewardedVideoAdDidClick:(BaiduMobAdRewardVideo *)video withPlayingProgress:(CGFloat)progress {
+    NSLog(@"激励视频被点击，progress:%f", progress);
+}
+
+- (void)rewardedVideoAdDidClose:(BaiduMobAdRewardVideo *)video withPlayingProgress:(CGFloat)progress {
+    NSLog(@"激励视频点击关闭,视图已销毁，progress:%f", progress);
+    [self sendEventWithName:@"RewardDidClose" body:@{@"isEnded": @(self.isRewardSuccess)}];
+}
+
+- (void)rewardedVideoAdWillClose:(BaiduMobAdRewardVideo *)video withPlayingProgress:(CGFloat)progress {
+    NSLog(@"激励视频点击关闭,视图即将销毁，progress:%f", progress);
+}
+
+- (void)rewardedVideoAdDidSkip:(BaiduMobAdRewardVideo *)video withPlayingProgress:(CGFloat)progress {
+    NSLog(@"激励视频点击跳过, progress:%f", progress);
+}
+
+- (void)rewardedVideoAdRewardDidSuccess:(BaiduMobAdRewardVideo *)video verify:(BOOL)verify {
+    NSLog(@"激励视频奖励成功");
+    self.isRewardSuccess = verify;
+}
+
+- (void)rewardedAdLoadFailCode:(NSString *)errCode message:(NSString *)message rewardedAd:(BaiduMobAdRewardVideo *)video {
+    NSLog(@"激励视频请求失败，errCode:%@ failReason：%@", errCode, message);
+}
+
+- (void)rewardedAdLoadSuccess:(BaiduMobAdRewardVideo *)video {
+    NSLog(@"激励视频价格标签: %@", [video getECPMLevel]);
+    NSLog(@"激励视频请求成功");
+}
 
 - (void)removeSplashAdView {
     if (self.buSplash) {
