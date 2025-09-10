@@ -77,8 +77,6 @@ import com.baidu.mobads.sdk.api.ExpressInterstitialAd;
 import com.baidu.mobads.sdk.api.ExpressInterstitialListener;
 import com.baidu.mobads.sdk.api.MobadsPermissionSettings;
 
-import com.tencent.bugly.crashreport.CrashReport;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,15 +103,12 @@ public class RNAdPolyModule extends ReactContextBaseJavaModule {
     private boolean isLoadAnShowReward = false;
 
     public final String APP_NAME = "口袋五线谱";
-    public final String BUGLY_APP_ID = "7c356cab77";
     public final String WEIXIN_OPEN_APP_ID = "wxa8bfec0590b522cd";
 
     public RNAdPolyModule(ReactApplicationContext context) {
         super(context);
         this.context = context;
         AdHelper.reactContext = context;
-
-        CrashReport.initCrashReport(getReactApplicationContext(), BUGLY_APP_ID, BuildConfig.DEBUG);
     }
 
     @Override
