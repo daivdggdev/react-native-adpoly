@@ -703,7 +703,6 @@ RCT_EXPORT_METHOD(loadRewardVideo:(NSString*)type
 }
 
 RCT_EXPORT_METHOD(showRewardVideo:(NSString*)type
-                  placementId:(NSString*)placementId
                   rewardName:(NSString*)rewardName
                rewardAmount:(NSInteger)rewardAmount)
 {
